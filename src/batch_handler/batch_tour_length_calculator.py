@@ -1,5 +1,6 @@
 import math
 
+
 # Initialize the direction of the tour. It can be either True (upwards) or False (downwards).
 direction = True
 
@@ -93,9 +94,6 @@ def sort_and_transform_batch_s_shape_routing(unsorted_batch):
 
     return final_sorted_batch
 
-    
-
-
 
 
 def calculate_distance_to_next_item(current_position, starting_position, item_position, max_y_position):
@@ -111,36 +109,41 @@ def calculate_distance_to_next_item(current_position, starting_position, item_po
     # Declare the global variables
     global direction
     
-    if((current_position[0], current_position[1]) == (item_position[0], item_position[1])):
-        #If the item is on the same position as the current position
-        distance=0
-    elif(current_position[0]==item_position[0]):
-            #If the item is on the same aisle as the current position
-            distance=abs(current_position[1]-item_position[1]) #Calculate the y-distance to the item
+    if(current_position==starting_position):
+        #If the current position is the starting position
+        distance=abs(current_position[0]-item_position[0])+abs(current_position[1]-item_position[1])
     else:
-            #If the item is on a different aisle than the current position
-            if(direction):
-                #If the direction is upwards
-                #Calculate the y-distance to the end of the aisle. As the y-coordinate starts at 0, we have to do one more step to get to the end of the aisle
-                 distance=abs(current_position[1]-(max_y_position))
-                #Calculate the x-distance to the item
-                 distance+=abs(current_position[0]-item_position[0])
-                #Calculate the y-distance to the item from the end of the aisle.
-                 distance+=abs((max_y_position)-item_position[1])
-                #Change the direction
-                 direction=False
-            else:
-                #If the direction is downwards
-                #Calculate the y-distance to the end of the aisle. As the y-coordinate starts at 0, we have to do one more step to get to the end of the aisle
-                distance=abs(current_position[1]-starting_position[1])
-                #Calculate the x-distance to the item
-                distance+=abs(current_position[0]-item_position[0])
-                #Calculate the y-distance to the item from the end of the aisle.
-                distance+=abs(starting_position[1]-item_position[1])
-                #Change the direction
-                direction=True
+        if((current_position[0], current_position[1]) == (item_position[0], item_position[1])):
+            #If the item is on the same position as the current position
+            distance=0
+        elif(current_position[0]==item_position[0]):
+                #If the item is on the same aisle as the current position
+                distance=abs(current_position[1]-item_position[1]) #Calculate the y-distance to the item
+        else:
+                #If the item is on a different aisle than the current position
+                if(direction):
+                    #If the direction is upwards
+                    #Calculate the y-distance to the end of the aisle. As the y-coordinate starts at 0, we have to do one more step to get to the end of the aisle
+                    distance=abs(current_position[1]-(max_y_position))
+                    #Calculate the x-distance to the item
+                    distance+=abs(current_position[0]-item_position[0])
+                    #Calculate the y-distance to the item from the end of the aisle.
+                    distance+=abs((max_y_position)-item_position[1])
+                    #Change the direction
+                    direction=False
+                else:
+                    #If the direction is downwards
+                    #Calculate the y-distance to the end of the aisle. As the y-coordinate starts at 0, we have to do one more step to get to the end of the aisle
+                    distance=abs(current_position[1]-starting_position[1])
+                    #Calculate the x-distance to the item
+                    distance+=abs(current_position[0]-item_position[0])
+                    #Calculate the y-distance to the item from the end of the aisle.
+                    distance+=abs(starting_position[1]-item_position[1])
+                    #Change the direction
+                    direction=True
 
     return distance
+
 
 
 def calculate_distance_to_starting_position(current_position, starting_position):
