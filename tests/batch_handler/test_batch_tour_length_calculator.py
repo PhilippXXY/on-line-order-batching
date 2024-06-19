@@ -1,6 +1,7 @@
 import unittest
 from src.batch_handler.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
 from tests.data.test_batch import test_batches, warehouse_layout
+from tabulate import tabulate
 
 class TestBatchTourLengthHandler(unittest.TestCase):
     
@@ -12,17 +13,12 @@ class TestBatchTourLengthHandler(unittest.TestCase):
                 # Print the result
                 print(f"Batch {i} tour length: {result}")
                 
-                # Prepare the table
-                column_width = 15
+                 # Prepare the table
                 table_data = [[item['item_id'], item['abs_x_position'], item['abs_y_position'], item['abs_z_position']] for item in sorted_batch]
+                headers = ["Item ID", "Aisle No.", "Y Position", "Z Position"]
                 
-                # Print headers
-                print(f"{'Item ID':<{column_width}} {'Aisle No.':<{column_width}} {'Y Position':<{column_width}} {'Z Position':<{column_width}}")
-                print("-" * 60)
-                
-                # Print data rows
-                for row in table_data:
-                    print(f"{row[0]:<{column_width}} {row[1]:<{column_width}} {row[2]:<{column_width}} {row[3]:<{column_width}}")
+                # Print table using tabulate
+                print(tabulate(table_data, headers=headers, tablefmt="simple_grid"))
 
                 print("\n")
                 
