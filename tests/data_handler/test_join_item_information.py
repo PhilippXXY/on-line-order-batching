@@ -8,7 +8,7 @@ class TestJoinItemInformation(unittest.TestCase):
     def test_get_item_with_position_existing_item(self):
         # Test for an existing item
         item_id = 1
-        expected_output = {'id': 1, 'abs_x_position': 0, 'abs_y_position': 0, 'abs_z_position': 0}
+        expected_output = {'item_id': 1, 'abs_x_position': 0, 'abs_y_position': 0, 'abs_z_position': 0}
         result = join_item_id_and_position_csv(self.dataset_path, item_id)
         print(f"Returned values for item_id {item_id}: {result}")
         self.assertEqual(result, expected_output)

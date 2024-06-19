@@ -12,10 +12,10 @@ def join_item_id_and_position_csv(dataset_path, item_id):
     dataset = pd.read_csv(dataset_path, delimiter=';')
 
     # Check if the dataset contains the required columns as they are needed for later processing
-    required_columns = ['id', 'abs_x_position', 'abs_y_position', 'abs_z_position']
+    required_columns = ['item_id', 'abs_x_position', 'abs_y_position', 'abs_z_position']
 
     # Filter the dataset for the specific item ID
-    item_row = dataset[dataset['id'] == item_id]
+    item_row = dataset[dataset['item_id'] == item_id]
 
     # Check if the item ID exists in the dataset
     if item_row.empty:

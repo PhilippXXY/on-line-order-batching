@@ -1,5 +1,5 @@
 
-id;abs_x_position;abs_y_position;abs_z_position
+item_id;abs_x_position;abs_y_position;abs_z_position
 1;0;0;0
 2;0;0;1
 3;0;0;2
