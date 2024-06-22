@@ -6,10 +6,16 @@ from tabulate import tabulate
 class TestBatchTourLengthHandler(unittest.TestCase):
     
     def test_calculate_tour_length_s_shape_routing(self):
+        '''
+        This function tests the calculate_tour_length_s_shape_routing function.
+        '''
         for i, batch in enumerate(test_batches):
             with self.subTest(batch=i):
+                # Wrap the batch in the expected structure like it would be in the process
+                wrapped_batch = {'orders': [{'items': batch}]}
+
                 # Calculate the tour length
-                result, sorted_batch = calculate_tour_length_s_shape_routing(batch, warehouse_layout)
+                result, sorted_batch = calculate_tour_length_s_shape_routing(wrapped_batch, warehouse_layout)
                 # Print the result
                 print(f"Batch {i} tour length: {result}")
                 

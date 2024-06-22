@@ -1,6 +1,6 @@
 # Sets of test data with order ids
 test_orders = [
-    #0
+    #1
     {
         'order_id': 1,
         'items': [
@@ -17,7 +17,7 @@ test_orders = [
         ]
     },
 
-    #1
+    #2
     {
         'order_id': 2,
         'items': [
@@ -31,7 +31,7 @@ test_orders = [
         ]
     },
 
-    #2 (equal as 1 but in different order)
+    #3 (equal as #2 but in different order)
     {
         'order_id': 3,
         'items': [
@@ -45,7 +45,7 @@ test_orders = [
         ]
     },
 
-    #3
+    #4
     {
         'order_id': 4,
         'items': [
@@ -54,7 +54,7 @@ test_orders = [
         ]
     },
 
-    #4
+    #5
     {
         'order_id': 5,
         'items': [
@@ -68,7 +68,7 @@ test_orders = [
         ]
     },
 
-    #5
+    #6
     {
         'order_id': 6,
         'items': [
@@ -79,7 +79,7 @@ test_orders = [
         ]
     },
 
-    #6 (equal as 5 but with one duplicate)
+    #7 (equal as #6 but with one duplicate)
     {
         'order_id': 7,
         'items': [
@@ -88,6 +88,23 @@ test_orders = [
             {'item_id': 384},
             {'item_id': 384},
             {'item_id': 301}
+        ]
+    },
+    #8 (equal as #4)
+    {
+        'order_id': 8,
+        'items': [
+            {'item_id': 891},
+            {'item_id': 746}
+        ]
+    },
+    #9 (equal as #4 but with one duplicate)
+    {
+        'order_id': 9,
+        'items': [
+            {'item_id': 891},
+            {'item_id': 746},
+            {'item_id': 891}
         ]
     }
 ]
