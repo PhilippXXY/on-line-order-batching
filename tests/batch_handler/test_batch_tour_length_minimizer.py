@@ -15,7 +15,7 @@ class TestBatchTourLengthMinimizer(unittest.TestCase):
     dataset_orders_path = os.path.join('tests', 'data', 'test_orders.py')
     dataset_csv_path = os.path.join('tests', 'data', 'warehouse_positions_20x10x5.CSV')
     # Maximum batch size
-    max_batch_size = 15
+    max_batch_size = 20
 
 
     def load_orders(self, path):
@@ -47,6 +47,47 @@ class TestBatchTourLengthMinimizer(unittest.TestCase):
                 # Update the item with the position
                 item.update(join_item_id_and_position_csv(dataset_csv_path, item['item_id']))
         return orders
+
+
+    def test_local_search(self):
+        '''
+        This function tests the local search algorithm.
+        '''
+        # Load the test orders
+        orders = self.load_orders(self.dataset_orders_path)
+        orders = self.add_positions_to_items(orders, self.dataset_csv_path)
+        # Create the start batches
+        start_batches = create_start_batches(orders, self.max_batch_size)
+        # Calculate the total tour length of the initial batches
+        start_batches_tour_length = self.calculate_total_tour_length(start_batches, warehouse_layout)
+        print("Initial Batches Tour Length: ", start_batches_tour_length)
+        # Set the initial batches as the start batches
+        initial_batches = start_batches
+        initial_batches_tour_length = start_batches_tour_length
+
+        # Improve the batches using the local search algorithm
+        for i in range(10):
+            # Improve the batches using the local search swap algorithm
+            improved_batches = local_search_swap(initial_batches, self.max_batch_size, warehouse_layout)
+            # Calculate the total tour length of the improved batches after a swap
+            improved_batches_tour_length = self.calculate_total_tour_length(improved_batches, warehouse_layout)
+            print(f"Improved Batches SWAP Tour Length: {improved_batches_tour_length}")
+            # Set the improved batches as the new start batches
+            initial_batches = improved_batches
+            initial_batches_tour_length = improved_batches_tour_length
+            # Check if the total tour length of the improved batches is less or equal than the total tour length of the initial batches
+            self.assertLessEqual(improved_batches_tour_length, initial_batches_tour_length, "Total tour length of improved batches is not less than the total tour length of the initial batches")
+
+            # Improve the batches using the local search shift algorithm
+            improved_batches = local_search_shift(initial_batches, self.max_batch_size, warehouse_layout)
+            # Calculate the total tour length of the improved batches after a shift
+            improved_batches_tour_length = self.calculate_total_tour_length(improved_batches, warehouse_layout)
+            print(f"Improved Batches SHIFT Tour Length: {improved_batches_tour_length}")
+            # Set the improved batches as the new start batches
+            initial_batches = improved_batches
+            initial_batches_tour_length = improved_batches_tour_length
+            # Check if the total tour length of the improved batches is less than the total tour length of the initial batches
+            self.assertLessEqual(improved_batches_tour_length, initial_batches_tour_length, "Total tour length of improved batches is not less than the total tour length of the initial batches")
 
 
     def test_create_start_batches(self):
