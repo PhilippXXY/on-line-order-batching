@@ -149,14 +149,79 @@ def local_search_swap(batches, max_batch_size, warehouse_layout):
 
     
 
-#TODO: Implement the shift operator
-def local_search_shift(batches, max_batch_size):
+def local_search_shift(batches, max_batch_size, warehouse_layout):
     """
     This function is the shift operator of the local search phase of the adapted Iterated Local Search Algorithm by Henn.
     """
-    pass
+    # Initialize the variables
+    is_optimal = False
+    # Continue until no improvement is found
+    while not is_optimal:
+        # Initialize the flag
+        improvement_found = False
+        # Iterate over all pairs of batches
+        for i, incumbent_batch in enumerate(batches):
+            for j, neighbor_batch in enumerate(batches):
+                # Skip the same batch
+                if i != j:
+                    # Calculate the tour length of the incumbent and neighbor batch before the swap
+                    incumbent_batch_tour_length, _ = calculate_tour_length_s_shape_routing(incumbent_batch, warehouse_layout)
+                    neighbor_batch_tour_length, _ = calculate_tour_length_s_shape_routing(neighbor_batch, warehouse_layout)
 
-    
+                    # Iterate over all pairs of orders
+                    for incumbent_order in list(incumbent_batch['orders']):
+                        # Create a copy of the batches to test the swap
+                        temp_incumbent_batch = copy.deepcopy(incumbent_batch)
+                        temp_neighbor_batch = copy.deepcopy(neighbor_batch)
+
+                        # Shift the order to the neighbor batch
+                        temp_incumbent_batch['orders'].remove(incumbent_order)
+                        temp_neighbor_batch['orders'].append(incumbent_order)
+
+                        # Debugging information
+                        # print(f"Trying shift: Incumbent Order {incumbent_order['order_id']} to Neighbor Batch")
+                        # print(f"Temp Incumbent Batch Size: {sum(len(order['items']) for order in temp_incumbent_batch['orders'])}, Temp Neighbor Batch Size: {sum(len(order['items']) for order in temp_neighbor_batch['orders'])}")
+
+                        # Ensure the batch sizes are within the maximum limit
+                        if sum(len(order['items']) for order in temp_incumbent_batch['orders']) > max_batch_size or \
+                               sum(len(order['items']) for order in temp_neighbor_batch['orders']) > max_batch_size:
+                            
+                            # Debugging information
+                            # print("Shift rejected due to batch size limit.")
+
+                            # Skip the shift
+                            continue
+
+                        # Calculate the tour length of the incumbent and neighbor batch after the shift
+                        temp_incumbent_batch_tour_length, _ = calculate_tour_length_s_shape_routing(temp_incumbent_batch, warehouse_layout)
+                        temp_neighbor_batch_tour_length, _ = calculate_tour_length_s_shape_routing(temp_neighbor_batch, warehouse_layout)
+
+                        # Check if the shift is an improvement
+                        if temp_incumbent_batch_tour_length + temp_neighbor_batch_tour_length < incumbent_batch_tour_length + neighbor_batch_tour_length:
+                            
+                            # Debugging information
+                            #print(f"Improvement found by shifting order {incumbent_order['order_id']} to batch {j}")
+                            #print(f"Original Incumbent Batch Tour Length: {incumbent_batch_tour_length}, Neighbor Batch Tour Length: {neighbor_batch_tour_length}")
+                            #print(f"New Incumbent Batch Tour Length: {temp_incumbent_batch_tour_length}, New Neighbor Batch Tour Length: {temp_neighbor_batch_tour_length}")
+
+                            # Update the batches
+                            batches[i] = temp_incumbent_batch
+                            batches[j] = temp_neighbor_batch
+                            # Update the flag
+                            improvement_found = True
+                            # Break the loop
+                            break
+                    if improvement_found:
+                        break
+            if improvement_found:
+                break
+        
+        if not improvement_found:
+            # Exit the loop as no improvement was found
+            is_optimal = True
+
+    return batches
+
 
 #TODO: Implement the perturbation phase
 def perturbation_phase():
