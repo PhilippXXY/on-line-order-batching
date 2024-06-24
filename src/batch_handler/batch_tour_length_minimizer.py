@@ -1,5 +1,6 @@
 import copy
 import random
+import time
 import uuid
 
 from src.batch_handler.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
@@ -56,13 +57,96 @@ def generate_unique_id():
     return uuid.uuid4().hex
 
 
-#TODO: Implement the local search phase
-def local_search_phase(start_batches, max_batch_size, warehouse_layout):
+def iterated_local_search(s_initial, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit):
+    """
+    This function is the main function of the adapted Iterated Local Search Algorithm by Henn. The naming of the variables is based on another paper by Henn.
+
+    :param s_initial: A list of batches to optimize.
+    :param max_batch_size: The maximum size of orders a batch can contain.
+    :param warehouse_layout: A dictionary containing the warehouse layout information.
+    :param rearrangement_parameter: A constant between [0;1] which determines the amount of perturbation.
+    :param threshold_parameter: A constant between [0;1] which determines the threshold to choose a solution.
+    :param time_limit: The maximum time in seconds the algorithm is allowed to run.
+    """
+    # Initial solution provided by the FCFS rule
+    s = s_initial
+    # Get the first solution by applying the local search algorithm
+    s_asterisk = local_search_phase(s_initial, max_batch_size, warehouse_layout)
+    # Set the incumbent solution to the first solution
+    s_incumbent = s_asterisk
+
+    # Set the flag
+    is_optimal = False
+
+    # Perform the iterations while the flag is not set
+    while not is_optimal:
+        # Set the start time to the current time
+        start_time = time.time()
+        # Calculate the tour length of the incumbent solution
+        d_s_incumbent = sum(calculate_tour_length_s_shape_routing(batch, warehouse_layout)[0] for batch in s_incumbent)
+        
+        # Perform the iterations inside the time limit
+        while time.time()-start_time < time_limit:
+            # Change the batches by applying the perturbation phase
+            s = perturbation_phase(s_incumbent, max_batch_size, rearrangement_parameter)
+            # Improve the batches using the local search algorithm
+            s = local_search_phase(s, max_batch_size, warehouse_layout)
+
+            # Calculate the total tour length of the batches s
+            d_s = sum(calculate_tour_length_s_shape_routing(batch, warehouse_layout)[0] for batch in s)
+            # Calculate the total tour length of the batches s_asterisk
+            d_s_asterisk = sum(calculate_tour_length_s_shape_routing(batch, warehouse_layout)[0] for batch in s_asterisk)
+
+            # Check if the total tour length of the batches s is less than the total tour length of the batches s_asterisk
+            if  d_s < d_s_asterisk:
+                # Set the improved batches as the new batches s_asterisk
+                s_asterisk = s
+                # Set the improved batches as the new incumbent batches
+                s_incumbent = s
+
+        # Check if the total tour length of the incumbent batches is less than the total tour length of the batches s_asterisk
+        if d_s_incumbent < d_s_asterisk and (d_s - d_s_asterisk) < (threshold_parameter*d_s_asterisk):
+            # Set the incumbent batches as the new batches s_asterisk
+            s_incumbent = s_asterisk
+            # Set the flag
+            is_optimal = True
+
+    return s_asterisk
+  
+
+def local_search_phase(initial_batches, max_batch_size, warehouse_layout):
     """
     This function is the local search phase of the adapted Iterated Local Search Algorithm by Henn.
+
+    :param batches: A list of batches to optimize.
+    :param max_batch_size: The maximum size of orders a batch can contain.
+    :param warehouse_layout: A dictionary containing the warehouse layout information.
+    :return: A list of optimized batches.
     """
-    pass
-    
+    # Calculate the tour length of the initial batches
+    initial_batches_tour_length = sum(calculate_tour_length_s_shape_routing(batch, warehouse_layout)[0] for batch in initial_batches)
+    # Initialize the variables
+    improved_batches_tour_length = 0
+
+    # Improve the batches using the local search algorithm
+    while improved_batches_tour_length < initial_batches_tour_length:
+        # Improve the batches using the local search swap algorithm
+        improved_batches = local_search_swap(initial_batches,max_batch_size, warehouse_layout)
+        # Calculate the total tour length of the improved batches after a swap
+        improved_batches_tour_length = sum(calculate_tour_length_s_shape_routing(batch, warehouse_layout)[0] for batch in improved_batches)
+        # Set the improved batches as the new start batches 
+        initial_batches = improved_batches
+        initial_batches_tour_length = improved_batches_tour_length
+        # Improve the batches using the local search shift algorithm
+        improved_batches = local_search_shift(initial_batches, max_batch_size, warehouse_layout)
+        # Calculate the total tour length of the improved batches after a shift
+        improved_batches_tour_length = sum(calculate_tour_length_s_shape_routing(batch, warehouse_layout)[0] for batch in improved_batches)
+        # Set the improved batches as the new start batches
+        initial_batches = improved_batches
+        initial_batches_tour_length = improved_batches_tour_length
+
+    return improved_batches
+
 
 def local_search_swap(batches, max_batch_size, warehouse_layout):
     """
@@ -258,63 +342,66 @@ def perturbation_phase(batches, max_batch_size, rearrangement_parameter):
         orders_amount_l = len(batch_l['orders'])
         # Get the minimum amount of orders in the selected batches
         min_orders_amount = min(orders_amount_k, orders_amount_l)
-        # Calculate the amount of orders to swap
-        orders_amount_to_swap_q = random.randint(1, int(min_orders_amount))
-        
-        # Store the first q orders
-        temp_batch_k_first_q = batch_k['orders'][:orders_amount_to_swap_q]
-        temp_batch_l_first_q = batch_l['orders'][:orders_amount_to_swap_q]
 
-        # Remove the first q orders
-        batch_k['orders'] = batch_k['orders'][orders_amount_to_swap_q:]
-        batch_l['orders'] = batch_l['orders'][orders_amount_to_swap_q:]
+        # Only proceed if there are orders to swap
+        if min_orders_amount > 0:
+            # Calculate the amount of orders to swap
+            orders_amount_to_swap_q = random.randint(1, int(min_orders_amount))
 
-        # Initliaze a batch for the orders that could not be swapped
-        new_batch = {
-            'batch_id': generate_unique_id(),
-            'orders': []
-        }
+            # Store the first q orders
+            temp_batch_k_first_q = batch_k['orders'][:orders_amount_to_swap_q]
+            temp_batch_l_first_q = batch_l['orders'][:orders_amount_to_swap_q]
 
-        for order in temp_batch_k_first_q:
-            # Check if the sum of the shortened batch and the currently iterated order exceeds the maximum batch size
-            if sum(len(order['items']) for order in batch_l['orders']) + len(order['items']) > max_batch_size:
-                # Add the orders to a new batch
-                new_batch['orders'].append(order)
-            else:
-                # Add the orders to batch l
-                batch_l['orders'].append(order)
-            
-        for order in temp_batch_l_first_q:
-            # Check if the sum of the shortened batch and the currently iterated order exceeds the maximum batch size
-            if sum(len(order['items']) for order in batch_k['orders']) + len(order['items']) > max_batch_size:
-                # Add the orders to a new batch
-                new_batch['orders'].append(order)
-            else:
-                # Add the orders to batch k
-                batch_k['orders'].append(order)
+            # Remove the first q orders
+            batch_k['orders'] = batch_k['orders'][orders_amount_to_swap_q:]
+            batch_l['orders'] = batch_l['orders'][orders_amount_to_swap_q:]
 
-        # Check if the batch with the orders that could not be swapped is empty
-        if new_batch['orders']:
-            # Get the length of the new batch
-            new_batch_size = sum(len(order['items']) for order in new_batch['orders'])
-            if new_batch_size > max_batch_size:
-                # Split the orders into two groups
-                orders_group_1 = new_batch['orders'][:int(new_batch_size / 2)]
-                orders_group_2 = new_batch['orders'][int(new_batch_size / 2):]
-                # Assign the orders to two new batches
-                new_batch_1 = {
-                    'batch_id': generate_unique_id(),
-                    'orders': orders_group_1
-                }
-                new_batch_2 = {
-                    'batch_id': generate_unique_id(),
-                    'orders': orders_group_2
-                }
-                # Append the new batches to the list of batches
-                batches.append(new_batch_1)
-                batches.append(new_batch_2)
-            else:
-                # Append the new batch to the list of batches
-                batches.append(new_batch)
+            # Initliaze a batch for the orders that could not be swapped
+            new_batch = {
+                'batch_id': generate_unique_id(),
+                'orders': []
+            }
+
+            for order in temp_batch_k_first_q:
+                # Check if the sum of the shortened batch and the currently iterated order exceeds the maximum batch size
+                if sum(len(order['items']) for order in batch_l['orders']) + len(order['items']) > max_batch_size:
+                    # Add the orders to a new batch
+                    new_batch['orders'].append(order)
+                else:
+                    # Add the orders to batch l
+                    batch_l['orders'].append(order)
+                
+            for order in temp_batch_l_first_q:
+                # Check if the sum of the shortened batch and the currently iterated order exceeds the maximum batch size
+                if sum(len(order['items']) for order in batch_k['orders']) + len(order['items']) > max_batch_size:
+                    # Add the orders to a new batch
+                    new_batch['orders'].append(order)
+                else:
+                    # Add the orders to batch k
+                    batch_k['orders'].append(order)
+
+            # Check if the batch with the orders that could not be swapped is empty
+            if new_batch['orders']:
+                # Get the length of the new batch
+                new_batch_size = sum(len(order['items']) for order in new_batch['orders'])
+                if new_batch_size > max_batch_size:
+                    # Split the orders into two groups
+                    orders_group_1 = new_batch['orders'][:int(new_batch_size / 2)]
+                    orders_group_2 = new_batch['orders'][int(new_batch_size / 2):]
+                    # Assign the orders to two new batches
+                    new_batch_1 = {
+                        'batch_id': generate_unique_id(),
+                        'orders': orders_group_1
+                    }
+                    new_batch_2 = {
+                        'batch_id': generate_unique_id(),
+                        'orders': orders_group_2
+                    }
+                    # Append the new batches to the list of batches
+                    batches.append(new_batch_1)
+                    batches.append(new_batch_2)
+                else:
+                    # Append the new batch to the list of batches
+                    batches.append(new_batch)
 
     return batches

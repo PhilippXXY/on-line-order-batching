@@ -3,7 +3,7 @@ import importlib.util
 import os
 from tabulate import tabulate
 from src.batch_handler.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
-from src.batch_handler.batch_tour_length_minimizer import create_start_batches, local_search_shift, local_search_swap, perturbation_phase
+from src.batch_handler.batch_tour_length_minimizer import create_start_batches, iterated_local_search, local_search_shift, local_search_swap, perturbation_phase
 from src.data_handler.join_item_information import join_item_id_and_position_csv
 from tests.data.test_batch import warehouse_layout
 
@@ -18,6 +18,36 @@ class TestBatchTourLengthMinimizer(unittest.TestCase):
     max_batch_size = 20
     # Reaarangement parameter
     rearrangement_parameter = 0.8
+    # Threshold parameter
+    threshold_parameter = 0.5
+    # Time limit
+    time_limit = 10 # seconds
+
+    def test_iterated_local_search(self):
+        '''
+        This function tests the iterated local search algorithm.
+        '''
+        # Load the test orders
+        orders = self.load_orders(self.dataset_orders_path)
+        orders = self.add_positions_to_items(orders, self.dataset_csv_path)
+        # Create the initial batches
+        start_batches = create_start_batches(orders, self.max_batch_size)
+        # Perform the iterated local search
+        optimized_batches = iterated_local_search(start_batches, self.max_batch_size, warehouse_layout, self.rearrangement_parameter, self.threshold_parameter, self.time_limit)
+        
+        # Calculate the total tour length of the initial and optimized batches
+        initial_tour_length = self.calculate_total_tour_length(start_batches, warehouse_layout)
+        optimized_tour_length = self.calculate_total_tour_length(optimized_batches, warehouse_layout)
+        
+        # Print the total tour lengths
+        print(f"Total tour length of initial batches: {initial_tour_length}")
+        print(f"Total tour length of optimized batches: {optimized_tour_length}")
+        
+        # Check if the total tour length of the optimized batches is less than or equal to the total tour length of the initial batches
+        self.assertLessEqual(optimized_tour_length, initial_tour_length, "Total tour length of optimized batches is not less than or equal to the total tour length of the initial batches")
+        
+        # Check the batch sizes of the optimized batches
+        self.check_batch_sizes(optimized_batches, self.max_batch_size)
 
 
     def load_orders(self, path):
