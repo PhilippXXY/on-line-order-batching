@@ -3,7 +3,7 @@ import importlib.util
 import os
 from tabulate import tabulate
 from src.batch_handler.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
-from src.batch_handler.batch_tour_length_minimizer import create_start_batches, local_search_shift, local_search_swap
+from src.batch_handler.batch_tour_length_minimizer import create_start_batches, local_search_shift, local_search_swap, perturbation_phase
 from src.data_handler.join_item_information import join_item_id_and_position_csv
 from tests.data.test_batch import warehouse_layout
 
@@ -16,6 +16,8 @@ class TestBatchTourLengthMinimizer(unittest.TestCase):
     dataset_csv_path = os.path.join('tests', 'data', 'warehouse_positions_20x10x5.CSV')
     # Maximum batch size
     max_batch_size = 20
+    # Reaarangement parameter
+    rearrangement_parameter = 0.8
 
 
     def load_orders(self, path):
@@ -47,7 +49,7 @@ class TestBatchTourLengthMinimizer(unittest.TestCase):
                 # Update the item with the position
                 item.update(join_item_id_and_position_csv(dataset_csv_path, item['item_id']))
         return orders
-
+    
 
     def test_local_search(self):
         '''
@@ -64,9 +66,11 @@ class TestBatchTourLengthMinimizer(unittest.TestCase):
         # Set the initial batches as the start batches
         initial_batches = start_batches
         initial_batches_tour_length = start_batches_tour_length
+        # Initialize the improved batches tour length
+        improved_batches_tour_length = 0
 
         # Improve the batches using the local search algorithm
-        for i in range(10):
+        while improved_batches_tour_length < initial_batches_tour_length:
             # Improve the batches using the local search swap algorithm
             improved_batches = local_search_swap(initial_batches, self.max_batch_size, warehouse_layout)
             # Calculate the total tour length of the improved batches after a swap
@@ -88,6 +92,10 @@ class TestBatchTourLengthMinimizer(unittest.TestCase):
             initial_batches_tour_length = improved_batches_tour_length
             # Check if the total tour length of the improved batches is less than the total tour length of the initial batches
             self.assertLessEqual(improved_batches_tour_length, initial_batches_tour_length, "Total tour length of improved batches is not less than the total tour length of the initial batches")
+
+        # Print the amount of batches
+        print(f"Amount of start batches: {len(initial_batches)}")
+        print(f"Amount of improved batches: {len(improved_batches)}")
 
 
     def test_create_start_batches(self):
@@ -209,12 +217,52 @@ class TestBatchTourLengthMinimizer(unittest.TestCase):
         improved_batches_tour_length = self.calculate_total_tour_length(improved_batches, warehouse_layout)
         print(f"Total tour length of initial batches: {start_batches_tour_length}")
         print(f"Total tour length of improved batches: {improved_batches_tour_length}")
+        # Print the amount of start and improved batches
+        print(f"Amount of start batches: {len(start_batches)}")
+        print(f"Amount of improved batches: {len(improved_batches)}")
 
         # Check if the total tour length of the improved batches is less than the total tour length of the initial batches
         self.assertLess(improved_batches_tour_length, start_batches_tour_length, "Total tour length of improved batches is not less than the total tour length of the initial batches")
 
         # Check the batch sizes
         self.check_batch_sizes(improved_batches, self.max_batch_size)
+
+    def test_perturbation_phase(self):
+        '''
+        This function tests the perturbation phase.
+        '''
+        # Load the test orders
+        orders = self.load_orders(self.dataset_orders_path)
+        orders = self.add_positions_to_items(orders, self.dataset_csv_path)
+        # Create the start batches
+        start_batches = create_start_batches(orders, self.max_batch_size)
+        # Calculate the total tour length of the initial batches
+        start_batches_tour_length = self.calculate_total_tour_length(start_batches, warehouse_layout)
+        # Get the new batches after perturbation
+        perturbed_batches = perturbation_phase(start_batches, self.max_batch_size, self.rearrangement_parameter)
+        print("Perturbed Batches")
+        for batch in perturbed_batches:
+            table_data = []
+            for order in batch['orders']:
+                for item in order['items']:
+                    table_data.append([order['order_id'], item['item_id']])
+
+            headers = ["Order ID", "Item ID"]
+            table = tabulate(table_data, headers, tablefmt="simple_grid", showindex="always")
+            print(f"Batch {batch['batch_id']}")
+            print(table)
+            print("\n")
+
+        # Calculate the total tour length of the perturbed batches
+        perturbed_batches_tour_length = self.calculate_total_tour_length(perturbed_batches, warehouse_layout)
+        # Print the total tour length of the initial and perturbed batches
+        print(f"Total tour length of initial batches: {start_batches_tour_length}")
+        print(f"Total tour length of perturbed batches: {perturbed_batches_tour_length}")
+        # Print the amount of start and perturbed batches
+        print(f"Amount of start batches: {len(start_batches)}")
+        print(f"Amount of perturbed batches: {len(perturbed_batches)}")
+        # Check if any batch exceeds the maximum batch size
+        self.check_batch_sizes(perturbed_batches, self.max_batch_size)
 
 
     def calculate_total_tour_length(self, batches, warehouse_layout):
