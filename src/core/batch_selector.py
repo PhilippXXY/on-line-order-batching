@@ -4,7 +4,7 @@ from src.core.batch_tour_length_calculator import calculate_tour_length_s_shape_
 from src.core.batch_tour_length_minimizer import create_start_batches, generate_unique_id, iterated_local_search
 
 
-def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit, release_parameter):
+def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule):
     '''
     This function is called when the order picking decision point A or B is reached.
 
@@ -59,16 +59,14 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, re
 
         return batches, release_time
 
-
     else:
         # Apply the selection rules
-        ordered_for_picking_batches = selection_rules(batches)
+        ordered_for_picking_batches = sort_batches_by_selection_rules(batches, selection_rule)
         # Set the release time to the current time
         release_time = time.time()
 
         return ordered_for_picking_batches, release_time
         
-
 
 def order_picking_decision_point_c(batches, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit):
     '''
@@ -90,6 +88,111 @@ def order_picking_decision_point_c(batches, max_batch_size, warehouse_layout, re
     return batches
 
 
-#TODO: Implement the following function
-def selection_rules(batches):
-    pass
+def sort_batches_by_selection_rules(batches, warehouse_layout, selection_rule):
+    '''
+    This function sorts the batches according to the selection rule.
+
+    :param batches: list of batches
+    :param warehouse_layout: dictionary containing the warehouse layout information
+    :param selection_rule: selection rule to be applied
+    :return: list of sorted batches
+    '''
+
+    if selection_rule == 'SHORT' or selection_rule == 'short':
+        batches = selection_rule_short(batches, warehouse_layout)
+    elif selection_rule == 'LONG' or selection_rule == 'long':
+        batches = selection_rule_long(batches, warehouse_layout)
+    elif selection_rule == 'SAV' or selection_rule == 'sav':
+        batches = selection_rule_sav(batches, warehouse_layout)
+    else:
+        batches = selection_rule_first(batches)
+
+    return batches
+
+
+def selection_rule_first(batches):
+    '''
+    This function sorts the batches according to the first come first serve rule.
+
+    :param batches: list of batches
+    :return: list of sorted batches
+    '''
+
+    return batches
+
+
+def selection_rule_short(batches, warehouse_layout):
+    '''
+    This function sorts the batches according to the shortest tour length.
+
+    :param batches: list of batches
+    :param warehouse_layout: dictionary containing the warehouse layout information
+    :return: list of sorted batches
+    '''
+    # Initialize the sorted batches
+    sorted_batches = []
+
+    # For every batch in the list of batches
+    for batch in batches:
+        # Create the key 'tour_length' in the batch dictionary and assign the tour length of the batch to it
+        batch['tour_length'] = calculate_tour_length_s_shape_routing(batch['orders'], warehouse_layout)
+
+    # Sort the batches by the tour length ascending
+    sorted_batches = sorted(batches, key=lambda x: x['tour_length'])
+
+    return sorted_batches
+
+
+def selection_rule_long(batches, warehouse_layout):
+    '''
+    This function sorts the batches according to the longest tour length.
+
+    :param batches: list of batches
+    :param warehouse_layout: dictionary containing the warehouse layout information
+    :return: list of sorted batches
+    '''
+    # Initialize the sorted batches
+    sorted_batches = []
+
+    # For every batch in the list of batches
+    for batch in batches:
+        # Create the key 'tour_length' in the batch dictionary and assign the tour length of the batch to it
+        batch['tour_length'] = calculate_tour_length_s_shape_routing(batch['orders'], warehouse_layout)
+
+    # Sort the batches by the tour length descending
+    sorted_batches = sorted(batches, key=lambda x: x['tour_length'], reverse=True)
+
+    return sorted_batches
+
+
+def selection_rule_sav(batches, warehouse_layout):
+    '''
+    This function sort the batches by comparing the savings of the batches in comparison to the single service time.
+
+    :param batches: list of batches
+    :param warehouse_layout: dictionary containing the warehouse layout information
+    :return: list of sorted batches
+    '''
+    # Initialize the sorted batches
+    sorted_batches = []
+
+    # For every batch in the list of batches
+    for batch in batches:
+        # Initialize the sum of the single service times
+        single_service_time = 0
+
+        # For every order in the batch
+        for order in batch['orders']:
+            # Create for every order a batch with only the order
+            order_batch = [{'orders': [order]}]
+            # Calculate the single service time of the order
+            single_service_time += calculate_tour_length_s_shape_routing(order_batch, warehouse_layout)
+
+        # Calculate the savings of the batch
+        batch['savings'] = single_service_time - calculate_tour_length_s_shape_routing(batch['orders'], warehouse_layout)
+
+    # Sort the batches by the savings descending
+    sorted_batches = sorted(batches, key=lambda x: x['savings'], reverse=True)
+
+    return sorted_batches
+
