@@ -142,7 +142,6 @@ def get_inputs():
     # Store the answers in the variables
     variables = {
         'layout_path': answers['layout_path'],
-        'order_path': answers['order_path'],
         'max_batch_size': int(answers['max_batch_size']),
         'initial_order_release': int(answers['initial_order_release']),
         'rearrangement_parameter': float(answers['rearrangement_parameter']),
@@ -151,6 +150,10 @@ def get_inputs():
         'selection_rule': answers['selection_rule'],
         'debug_mode': debug_mode_global
     }
+
+    # Write the JSON orders to a file
+    duplicate_orders_to_py(answers['order_path'])
+
     return variables
 
 def program_manual():
@@ -178,3 +181,18 @@ def create_hyperlink(text, url):
     '''
     # Return the hyperlink
     return f"\033]8;;{url}\033\\{text}\033]8;;\033\\"
+
+
+def duplicate_orders_to_py(order_path):
+    '''
+    This function duplicates the orders to a .py file.
+
+    :param order_path: The path to the orders.
+    '''
+    # Read the orders from the file
+    with open(order_path, 'r') as file:
+        orders = file.read()
+
+    # Write the orders to a .py file
+    with open('imported_orders.py', 'w') as file:
+        file.write(orders)
