@@ -1,0 +1,3 @@
+'''
+File for shared variables
+'''

@@ -2,9 +2,9 @@ import unittest
 import importlib.util
 import os
 from tabulate import tabulate
-from src.core.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
-from src.core.batch_tour_length_minimizer import create_start_batches, iterated_local_search, local_search_shift, local_search_swap, perturbation_phase
-from src.core.join_item_information import join_item_id_and_position_csv
+from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
+from src.core.logic.batch_tour_length_minimizer import create_start_batches, iterated_local_search, local_search_shift, local_search_swap, perturbation_phase
+from src.core.logic.join_item_information import join_item_id_and_position_csv
 from tests.data.test_batch import warehouse_layout
 
 class TestBatchTourLengthMinimizer(unittest.TestCase):
