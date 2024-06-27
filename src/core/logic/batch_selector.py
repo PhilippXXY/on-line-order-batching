@@ -1,7 +1,7 @@
 import math
 import time
-from src.core.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
-from src.core.batch_tour_length_minimizer import create_start_batches, generate_unique_id, iterated_local_search
+from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
+from src.core.logic.batch_tour_length_minimizer import create_start_batches, generate_unique_id, iterated_local_search
 
 
 def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule):
@@ -57,7 +57,11 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, re
         scheduled_release_formula = ((1 + release_parameter)* arrival_time_longest_sst_order) + (release_parameter*longest_sst) - st_batch
         release_time = max(time.time(), scheduled_release_formula)
 
-        return batches, release_time
+        # Add the release time to the batch
+        for batch in batches:
+            batch['release_time'] = release_time
+
+        return batches
 
     else:
         # Apply the selection rules
@@ -65,10 +69,14 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, re
         # Set the release time to the current time
         release_time = time.time()
 
-        return ordered_for_picking_batches, release_time
+        # Add the release time to the batches
+        for batch in ordered_for_picking_batches:
+            batch['release_time'] = release_time
+
+        return ordered_for_picking_batches
         
 
-def order_picking_decision_point_c(batches, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit):
+def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit):
     '''
     This function is called when the order picking decision point C is reached.
     It returns the batches after applying the iterated local search algorithm.
@@ -82,8 +90,13 @@ def order_picking_decision_point_c(batches, max_batch_size, warehouse_layout, re
     :return: list of batches
     '''
 
+    batches = create_start_batches(orders, max_batch_size)
     # Apply the iterated local search algorithm to the batches
     batches = iterated_local_search(batches, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit)
+    # Add the release time to the batches
+    for batch in batches:
+        # Set the release time to the current time
+        batch['release_time'] = time.time()
 
     return batches
 

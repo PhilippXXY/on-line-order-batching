@@ -3,7 +3,7 @@ import random
 import time
 import uuid
 
-from src.core.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
+from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
 
 def create_start_batches(orders, max_batch_size):
     """
