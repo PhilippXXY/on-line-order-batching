@@ -1,5 +1,5 @@
 import unittest
-from src.batch_handler.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
+from src.core.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
 from tests.data.test_batch import test_batches, warehouse_layout
 from tabulate import tabulate
 

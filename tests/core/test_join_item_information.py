@@ -1,6 +1,6 @@
 import unittest
 import pandas as pd
-from src.data_handler.join_item_information import join_item_id_and_position_csv
+from src.core.join_item_information import join_item_id_and_position_csv
 from tabulate import tabulate
 
 class TestJoinItemInformation(unittest.TestCase):

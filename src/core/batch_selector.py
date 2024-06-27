@@ -1,7 +1,7 @@
 import math
 import time
-from src.batch_handler.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
-from src.batch_handler.batch_tour_length_minimizer import create_start_batches, generate_unique_id, iterated_local_search
+from src.core.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
+from src.core.batch_tour_length_minimizer import create_start_batches, generate_unique_id, iterated_local_search
 
 
 def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit, release_parameter):
