@@ -7,7 +7,7 @@ from core.logic.batch_tour_length_calculator import batch_tour_length_calculator
 from core.logic.batch_tour_length_minimizer import batch_tour_length_minimizer_logic
 from core.logic.join_item_information import join_item_information_logic
 
-import vars.shared_vars as shared_vars
+import src.vars.shared_variables as shared_variables
 
 global input_process_running
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     cli_thread.join()
 
     # Set the shared variables
-    shared_vars.variables = cli_thread.variables
+    shared_variables.variables = cli_thread.variables
 
     # Join the logic threads
     for thread in logic_threads:
