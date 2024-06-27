@@ -60,17 +60,28 @@ def sort_and_transform_batch_s_shape_routing(unsorted_batch):
     :param unsorted_batch: A list of dictionaries, each containing 'id', 'abs_x_position', 'abs_y_position', and 'abs_z_position'.
     :return: The sorted batch.
     """
+    # Initialize the transformed batch
     transformed_batch = []
-    for item in unsorted_batch:
-        # Transform the x-coordinate
-        transformed_item=item.copy()
-        transformed_item['abs_x_position'] = math.ceil(transformed_item['abs_x_position']/2)
-        transformed_batch.append(transformed_item)
+    # Iterate over all orders and items
+    for order in unsorted_batch['orders']:
+        for item in order['items']:
+            # Check if the item is a dictionary
+            if not isinstance(item, dict):
+                raise TypeError(f"Expected item to be a dict, got {type(item)}")
+            # Transform the x-coordinate
+            transformed_item = item.copy()
+            # Check if the item has an 'abs_x_position' key
+            if 'abs_x_position' not in transformed_item:
+                raise KeyError(f"Item {item} does not have 'abs_x_position'")
+            # Divide the x-coordinate by 2 and round up to the nearest integer to transform the x-coordinate into corresponding aisles
+            transformed_item['abs_x_position'] = math.ceil(transformed_item['abs_x_position'] / 2)
+            # Append the transformed item to the transformed batch
+            transformed_batch.append(transformed_item)
 
     # Sort the batch by the x-coordinate
     sorted_batch = sorted(transformed_batch, key=lambda x: (x['abs_x_position'], x['abs_y_position'], x['abs_z_position']))
 
-  # Group items by x_position (aisle)
+    # Group items by x_position (aisle)
     grouped_batch = {}
     for item in sorted_batch:
         aisle = item['abs_x_position']
