@@ -12,8 +12,11 @@ import src.vars.shared_variables as shared_variables
 global input_process_running
 
 if __name__ == "__main__":
+    cli_initialized_event = threading.Event()
+
     # Initialize the CLI thread
-    cli_thread = CLIThread()
+    cli_thread = CLIThread(cli_initialized_event)
+
     # Initialize the logic threads
     logic_threads = [
         LogicThread(cli_thread, batch_selector_logic),
@@ -24,14 +27,17 @@ if __name__ == "__main__":
 
     # Start the CLI thread
     cli_thread.start()
+    # Wait for the CLI initialization to complete before starting the logic threads
+    cli_initialized_event.wait()
+
+    # Set the shared variables
+    shared_variables.variables = cli_thread.variables
+
     # Start the logic threads
     for thread in logic_threads:
         thread.start()
     # Join the CLI thread
     cli_thread.join()
-
-    # Set the shared variables
-    shared_variables.variables = cli_thread.variables
 
     # Join the logic threads
     for thread in logic_threads:
