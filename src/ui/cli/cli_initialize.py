@@ -78,7 +78,7 @@ def get_inputs():
             'type': 'input',
             'name': 'order_path',
             'message': 'Path to the orders:',
-            'default': 'tests/data/test_orders.py'
+            'default': 'tests/data/test_orders.json'
         },
         {
             'type': 'input',
