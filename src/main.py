@@ -1,11 +1,11 @@
 import threading
 
-from ui.cli_controller import CLIThread
-from core.logic_controller import LogicThread
-from core.logic.batch_selector import batch_selector_logic
-from core.logic.batch_tour_length_calculator import batch_tour_length_calculator_logic
-from core.logic.batch_tour_length_minimizer import batch_tour_length_minimizer_logic
-from core.logic.join_item_information import join_item_information_logic
+from src.ui.cli_controller import CLIThread
+from src.core.logic_controller import LogicThread
+from src.core.logic.batch_selector import batch_selector_logic
+from src.core.logic.batch_tour_length_calculator import batch_tour_length_calculator_logic
+from src.core.logic.batch_tour_length_minimizer import batch_tour_length_minimizer_logic
+from src.core.logic.join_item_information import join_item_information_logic
 
 import src.vars.shared_variables as shared_variables
 

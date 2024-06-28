@@ -3,8 +3,8 @@ import time
 import uuid
 from src.ui import imported_orders
 from src.ui.cli.cli_initialize import initialize
-import vars.shared_variables as shared_variables
-import ui.imported_orders as imported_orders
+import src.vars.shared_variables as shared_variables
+import src.ui.imported_orders as imported_orders
 
 class CLIThread(threading.Thread):
     '''

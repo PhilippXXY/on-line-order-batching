@@ -4,7 +4,7 @@ import time
 from src.core.logic.input_handler import get_initial_order_release, get_input_process_running, get_max_batch_size, get_new_order, get_rearrangement_parameter, get_selection_rule, get_threshold_parameter, get_time_limit, get_warehouse_layout, is_new_order_available
 from src.core.logic.pivot_logic import last_order_arrives, new_order_arrives,  picker_starts_tour
 
-import vars.shared_variables as shared_variables
+import src.vars.shared_variables as shared_variables
 
 
 
