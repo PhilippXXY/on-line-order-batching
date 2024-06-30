@@ -1,28 +1,39 @@
+import json
 import click
 from InquirerPy import prompt, inquirer
+from src.vars import shared_variables
 
 # Define the buttons for the program
 release_button = 'Space'
 end_button = 'Delete'
+# Define the global variables
+global debug_mode_global
 
 # Start the CLI program
 @click.command()
 @click.option('--debug-mode', '-d', is_flag=True, help='Run the program in debug mode.')
-def initialize(debug_mode):
+@click.pass_context
+def initialize(ctx, debug_mode):
     '''
     This function is the initializer function of the program. It initializes the program and gets the inputs from the user.
 
     :param debug_mode: A boolean value that indicates if the program should run in debug mode.
     '''
+    # Call the global variables
     global debug_mode_global
-
-    # Set the global debug_mode
     debug_mode_global = debug_mode
+    shared_variables.variables['debug_mode'] = debug_mode
 
     # Display the welcome message
     display_welcome_message()
     # Get the inputs from the user
     variables = get_inputs()
+    # Print the inputs for debug mode
+    if debug_mode_global:
+        click.echo('The inputs are: ')
+        for key, value in variables.items():
+            click.echo(f'{key}: {value}')
+        click.echo('\n')
     # Display the manual of the program
     program_manual()
 
@@ -30,6 +41,12 @@ def initialize(debug_mode):
     start_program = inquirer.confirm(message='Do you want to start the program with the provided inputs and release the orders?').execute()
     click.echo('\n')
     if start_program:
+        # Print a message for debug mode
+        if debug_mode_global:
+            click.echo('The user has decided to start the program. The program will now be started.')
+        # Update the shared variables
+        shared_variables.variables.update(variables)
+        # Return the variables
         return variables
     else:
         click.echo('The program was terminated by the user. Please restart the program if you want to run it again.')
@@ -148,7 +165,6 @@ def get_inputs():
         'threshold_parameter': float(answers['threshold_parameter']),
         'time_limit': int(answers['time_limit']),
         'selection_rule': answers['selection_rule'],
-        'debug_mode': debug_mode_global
     }
 
     # Write the JSON orders to a file
@@ -182,7 +198,6 @@ def create_hyperlink(text, url):
     # Return the hyperlink
     return f"\033]8;;{url}\033\\{text}\033]8;;\033\\"
 
-
 def duplicate_orders_to_py(order_path):
     '''
     This function duplicates the orders to a .py file.
@@ -191,8 +206,16 @@ def duplicate_orders_to_py(order_path):
     '''
     # Read the orders from the file
     with open(order_path, 'r') as file:
-        orders = file.read()
+        orders = json.load(file)
+    # Clear the .py file content
+    open('src/ui/imported_orders.py', 'w').close()
+    # Write the orders to the .py file
+    with open('src/ui/imported_orders.py', 'a') as file:
+        file.write('imported_orders = ' + str(orders) + '\n')
+    # Print a message for debug mode
+    if debug_mode_global:
+        click.echo(f'The orders were duplicated to the file imported_orders.py. The orders are: {orders} \n')
 
-    # Write the orders to a .py file
-    with open('imported_orders.py', 'w') as file:
-        file.write(orders)
+if __name__ == '__main__':
+    initialize()
+

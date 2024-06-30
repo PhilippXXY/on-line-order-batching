@@ -1,46 +1,44 @@
 import threading
-
+import click
+import src.vars.shared_variables as shared_variables
 from src.ui.cli_controller import CLIThread
 from src.core.logic_controller import LogicThread
-from src.core.logic.batch_selector import batch_selector_logic
-from src.core.logic.batch_tour_length_calculator import batch_tour_length_calculator_logic
-from src.core.logic.batch_tour_length_minimizer import batch_tour_length_minimizer_logic
-from src.core.logic.join_item_information import join_item_information_logic
+from src.ui.cli.cli_initialize import initialize
 
-import src.vars.shared_variables as shared_variables
+@click.command()
+@click.option('--debug-mode', '-d', is_flag=True, help='Run the program in debug mode.')
+@click.pass_context
+def main(ctx, debug_mode):
+    '''
+    Main function of the program
 
-global input_process_running
+    :param ctx: Click context
+    :param debug_mode: Flag to run the program in debug mode
+    '''
+    # Set the debug mode in the shared variables
+    shared_variables.variables['debug_mode'] = debug_mode
+    # Create a dictionary in the click context to store the variables
+    ctx.ensure_object(dict)
+
+    # Initialize the program
+    variables = ctx.invoke(initialize, debug_mode=debug_mode)
+    
+    # Check if the initialization was successful
+    if variables:
+        # Create the threads for the CLI and logic
+        init_event = threading.Event()
+        cli_thread = CLIThread(init_event, variables)
+        logic_thread = LogicThread(init_event, variables)
+
+        # Start the threads
+        cli_thread.start()
+        cli_thread.join()
+        logic_thread.start()
+        logic_thread.join()
+    else:
+        # Print a message that the program initialization was aborted
+        click.echo("Program initialization was aborted.")
+
 
 if __name__ == "__main__":
-    cli_initialized_event = threading.Event()
-
-    # Initialize the CLI thread
-    cli_thread = CLIThread(cli_initialized_event)
-
-    # Initialize the logic threads
-    logic_threads = [
-        LogicThread(cli_thread, batch_selector_logic),
-        LogicThread(cli_thread, batch_tour_length_calculator_logic),
-        LogicThread(cli_thread, batch_tour_length_minimizer_logic),
-        LogicThread(cli_thread, join_item_information_logic)
-    ]
-
-    # Start the CLI thread
-    cli_thread.start()
-    # Wait for the CLI initialization to complete before starting the logic threads
-    cli_initialized_event.wait()
-
-    # Set the shared variables
-    shared_variables.variables = cli_thread.variables
-
-    # Start the logic threads
-    for thread in logic_threads:
-        thread.start()
-    # Join the CLI thread
-    cli_thread.join()
-
-    # Join the logic threads
-    for thread in logic_threads:
-        thread.join()
-
-    
+    main(obj={})
