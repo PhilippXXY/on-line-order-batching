@@ -1,5 +1,6 @@
-import json
+import pandas as pd
 import src.vars.shared_variables as shared_variables
+
 
 def get_warehouse_layout():
     '''
@@ -7,9 +8,23 @@ def get_warehouse_layout():
 
     :return: warehouse_layout
     '''
-    warehouse_layout_path = shared_variables.variables['warehouse_layout_path']
-    warehouse_layout = json.loads(warehouse_layout_path)
+    warehouse_layout_path = shared_variables.variables.get('warehouse_layout_path')
+    # Read the CSV file
+    df = pd.read_csv(warehouse_layout_path, sep=';')
+    
+    # Calculate the max positions and round them in case they are not integers
+    max_x_position = round(df['abs_x_position'].max())
+    max_y_position = round(df['abs_y_position'].max())
+    max_z_position = round(df['abs_z_position'].max())
+    
+    # Create the warehouse layout dictionary
+    warehouse_layout = {
+        'max_x_position': max_x_position,
+        'max_y_position': max_y_position,
+        'max_z_position': max_z_position,
+    }
     return warehouse_layout
+
 
 def get_max_batch_size():
     '''
@@ -17,8 +32,9 @@ def get_max_batch_size():
 
     :return: max_batch_size
     '''
-    max_batch_size = shared_variables.variables['max_batch_size']
+    max_batch_size = shared_variables.variables.get('max_batch_size')
     return max_batch_size
+
 
 def get_initial_order_release():
     '''
@@ -26,8 +42,9 @@ def get_initial_order_release():
 
     :return: initial_order_release
     '''
-    initial_order_release = shared_variables.variables['initial_order_release']
+    initial_order_release = shared_variables.variables.get('initial_order_release')
     return initial_order_release
+
 
 def get_rearrangement_parameter():
     '''
@@ -35,8 +52,9 @@ def get_rearrangement_parameter():
 
     :return: rearrangement_parameter
     '''
-    rearrangement_parameter = shared_variables.variables['rearrangement_parameter']
+    rearrangement_parameter = shared_variables.variables.get('rearrangement_parameter')
     return rearrangement_parameter
+
 
 def get_threshold_parameter():
     '''
@@ -44,8 +62,9 @@ def get_threshold_parameter():
 
     :return: threshold_parameter
     '''
-    threshold_parameter = shared_variables.variables['threshold_parameter']
+    threshold_parameter = shared_variables.variables.get('threshold_parameter')
     return threshold_parameter
+
 
 def get_time_limit():
     ''' 
@@ -53,8 +72,9 @@ def get_time_limit():
 
     :return: time_limit
     '''
-    time_limit = shared_variables.variables['time_limit']
+    time_limit = shared_variables.variables.get('time_limit')
     return time_limit
+
 
 def get_selection_rule():
     '''
@@ -62,8 +82,9 @@ def get_selection_rule():
 
     :return: selection_rule
     '''
-    selection_rule = shared_variables.variables['selection_rule']
+    selection_rule = shared_variables.variables.get('selection_rule')
     return selection_rule
+
 
 def get_input_process_running():
     '''
@@ -71,8 +92,9 @@ def get_input_process_running():
 
     :return: input_process_running
     '''
-    input_process_running = shared_variables.variables['input_process_running']
+    input_process_running = shared_variables.variables.get('input_process_running')
     return input_process_running
+
 
 def get_new_order():
     '''
@@ -81,10 +103,9 @@ def get_new_order():
     :return: order
     '''
     # Get the new order from the shared variables
-    new_order = shared_variables.variables['order']
+    new_order = shared_variables.variables.get('order')
     # Remove the new order from the shared variables
-    shared_variables.variables['order'] = None
-    
+    shared_variables.variables.pop('order', None)
     return new_order
 
 

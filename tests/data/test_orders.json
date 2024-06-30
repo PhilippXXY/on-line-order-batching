@@ -36,7 +36,10 @@
     ]
   },
   {
-    "items": [{ "item_id": 891 }, { "item_id": 746 }]
+    "items": [
+      { "item_id": 891 },
+      { "item_id": 746 }
+    ]
   },
   {
     "items": [
@@ -67,10 +70,17 @@
     ]
   },
   {
-    "items": [{ "item_id": 891 }, { "item_id": 746 }]
+    "items": [
+      { "item_id": 891 },
+      { "item_id": 746 }
+    ]
   },
   {
-    "items": [{ "item_id": 891 }, { "item_id": 746 }, { "item_id": 891 }]
+    "items": [
+      { "item_id": 891 },
+      { "item_id": 746 },
+      { "item_id": 891 }
+    ]
   },
   {
     "items": [
@@ -172,10 +182,17 @@
     ]
   },
   {
-    "items": [{ "item_id": 213 }, { "item_id": 324 }]
+    "items": [
+      { "item_id": 213 },
+      { "item_id": 324 }
+    ]
   },
   {
-    "items": [{ "item_id": 567 }, { "item_id": 678 }, { "item_id": 789 }]
+    "items": [
+      { "item_id": 567 },
+      { "item_id": 678 },
+      { "item_id": 789 }
+    ]
   },
   {
     "items": [
@@ -186,7 +203,11 @@
     ]
   },
   {
-    "items": [{ "item_id": 345 }, { "item_id": 456 }, { "item_id": 567 }]
+    "items": [
+      { "item_id": 345 },
+      { "item_id": 456 },
+      { "item_id": 567 }
+    ]
   },
   {
     "items": [
@@ -197,10 +218,17 @@
     ]
   },
   {
-    "items": [{ "item_id": 101 }, { "item_id": 202 }, { "item_id": 303 }]
+    "items": [
+      { "item_id": 101 },
+    { "item_id": 202 },
+    { "item_id": 303 }
+  ]
   },
   {
-    "items": [{ "item_id": 404 }, { "item_id": 505 }]
+    "items": [
+      { "item_id": 404 },
+      { "item_id": 505 }
+    ]
   },
   {
     "items": [
@@ -220,7 +248,11 @@
     ]
   },
   {
-    "items": [{ "item_id": 600 }, { "item_id": 700 }, { "item_id": 800 }]
+    "items": [
+      { "item_id": 600 },
+      { "item_id": 700 },
+      { "item_id": 800 }
+    ]
   },
   {
     "items": [
@@ -232,7 +264,11 @@
     ]
   },
   {
-    "items": [{ "item_id": 314 }, { "item_id": 425 }, { "item_id": 536 }]
+    "items": [
+      { "item_id": 314 },
+      { "item_id": 425 },
+      { "item_id": 536 }
+    ]
   },
   {
     "items": [
@@ -252,7 +288,11 @@
     ]
   },
   {
-    "items": [{ "item_id": 656 }, { "item_id": 767 }, { "item_id": 878 }]
+    "items": [
+      { "item_id": 656 },
+      { "item_id": 767 },
+      { "item_id": 878 }
+    ]
   },
   {
     "items": [
@@ -376,6 +416,8 @@
     ]
   },
   {
-    "items": [{ "item_id": 11 }]
+    "items": [
+      { "item_id": 11 }
+    ]
   }
 ]

@@ -1,4 +1,3 @@
-import math
 import time
 from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
 from src.core.logic.batch_tour_length_minimizer import create_start_batches, generate_unique_id, iterated_local_search

@@ -87,7 +87,7 @@ def get_inputs():
     questions = [
         {
             'type': 'input',
-            'name': 'layout_path',
+            'name': 'warehouse_layout_path',
             'message': 'Path to the warehouse layout:',
             'default': 'tests/data/warehouse_positions_20x10x5.CSV'
         },
@@ -158,7 +158,7 @@ def get_inputs():
     click.echo('\n')
     # Store the answers in the variables
     variables = {
-        'layout_path': answers['layout_path'],
+        'warehouse_layout_path': answers['warehouse_layout_path'],
         'max_batch_size': int(answers['max_batch_size']),
         'initial_order_release': int(answers['initial_order_release']),
         'rearrangement_parameter': float(answers['rearrangement_parameter']),

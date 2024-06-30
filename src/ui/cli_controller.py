@@ -46,16 +46,19 @@ class CLIThread(threading.Thread):
             # Release the starting orders based on the initial order release variable
             for i in range(shared_variables.variables.get('initial_order_release')):
                 # Release an order
+                if debug_mode:
+                    click.echo(f'#{i}')
                 release_order = self.release_order()
                 # If there are no more orders to release, break the loop
                 if release_order == None:
                     break
         # Catch exceptions	
         except Exception as e:
-            print(f'CLIThread encountered an error: {e}')
+            click.echo(f'CLIThread encountered an error: {e}')
         # Finally, print a message that the run method has completed
         finally:
-            print('CLIThread run method completed')
+            if debug_mode:
+                click.echo('CLIThread run method completed')
 
 
     def get_picker_state(self):
