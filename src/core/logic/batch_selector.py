@@ -14,8 +14,10 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, re
     :param threshold_parameter: parameter for the threshold of the batches [0;1]
     :param time_limit: time limit for the iterated local search algorithm
     :param release_parameter: parameter for the release time of the batch [0;1]
+    :param selection_rule: selection rule to be applied
     :return: list of batches, release time
     '''
+    print('order_picking_decision_point_ab')
     # Initialize variables
     batches = []
     release_time = 0
@@ -64,7 +66,7 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, re
 
     else:
         # Apply the selection rules
-        ordered_for_picking_batches = sort_batches_by_selection_rules(batches, selection_rule)
+        ordered_for_picking_batches = sort_batches_by_selection_rules(batches, warehouse_layout, selection_rule)
         # Set the release time to the current time
         release_time = time.time()
 

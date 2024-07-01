@@ -65,6 +65,15 @@ def get_threshold_parameter():
     threshold_parameter = shared_variables.variables.get('threshold_parameter')
     return threshold_parameter
 
+def get_release_parameter():
+    '''
+    Get the release parameter from the shared variables
+
+    :return: release_parameter
+    '''
+    release_parameter = shared_variables.variables.get('release_parameter')
+    return release_parameter
+
 
 def get_time_limit():
     ''' 
@@ -102,10 +111,7 @@ def get_new_order():
 
     :return: order
     '''
-    # Get the new order from the shared variables
-    new_order = shared_variables.variables.get('order')
-    # Remove the new order from the shared variables
-    shared_variables.variables.pop('order', None)
+    new_order = shared_variables.orders.pop(0)    
     return new_order
 
 

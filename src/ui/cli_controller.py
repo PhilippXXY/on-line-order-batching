@@ -23,9 +23,26 @@ class CLIThread(threading.Thread):
         self.event = event
         # Set the variables
         self.variables = variables
+
+        # Set the debug mode
+        debug_mode = shared_variables.variables.get('debug_mode')
         # If debug mode is enabled, print the variables
-        if shared_variables.variables.get('debug_mode'):
+        if debug_mode:
             click.echo(f'CLIThread initialized with variables: {self.variables}\n')
+        # Set the input process to running
+        shared_variables.variables['input_process_running'] = True
+        # If debug mode is enabled, print a message
+        if debug_mode:
+            click.echo(f'Amount of orders to release: {shared_variables.variables.get("initial_order_release")}\n')
+        # Release the starting orders based on the initial order release variable
+        for i in range(shared_variables.variables.get('initial_order_release')):
+            # Release an order
+            if debug_mode:
+                click.echo(f'#{i}')
+            release_order = self.release_order()
+            # If there are no more orders to release, break the loop
+            if release_order == None:
+                break
 
 
     def run(self):
@@ -41,17 +58,6 @@ class CLIThread(threading.Thread):
             # Update the shared variables with the variables of the thread
             shared_variables.variables.update(self.variables)
             # If debug mode is enabled, print a message
-            if debug_mode:
-                click.echo(f'Amount of orders to release: {shared_variables.variables.get("initial_order_release")}\n')
-            # Release the starting orders based on the initial order release variable
-            for i in range(shared_variables.variables.get('initial_order_release')):
-                # Release an order
-                if debug_mode:
-                    click.echo(f'#{i}')
-                release_order = self.release_order()
-                # If there are no more orders to release, break the loop
-                if release_order == None:
-                    break
         # Catch exceptions	
         except Exception as e:
             click.echo(f'CLIThread encountered an error: {e}')
@@ -86,14 +92,14 @@ class CLIThread(threading.Thread):
         try:
             # If there are still orders in the imported orders
             if imported_orders.imported_orders:
-                # Pop the first order from the imported orders
+                # Pop the first order from the imported orders and store it in a variable
                 order = imported_orders.imported_orders.pop(0)
                 # Generate a unique order ID
                 order['order_id'] = generate_unique_id()
                 # Set the arrival time of the order to the current time
                 order['arrival_time'] = time.time()
                 # Update the shared variables with the released order
-                shared_variables.variables['order'] = order
+                shared_variables.orders.append(order)
                 # If debug mode is enabled, print a message
                 if shared_variables.variables.get('debug_mode'):
                     click.echo(f'Order released: {order}\n')

@@ -43,7 +43,7 @@ def initialize(ctx, debug_mode):
     if start_program:
         # Print a message for debug mode
         if debug_mode_global:
-            click.echo('The user has decided to start the program. The program will now be started.')
+            click.echo('The user has decided to start the program. The program will now be started.\n')
         # Update the shared variables
         shared_variables.variables.update(variables)
         # Return the variables
@@ -123,6 +123,12 @@ def get_inputs():
         },
         {
             'type': 'input',
+            'name': 'release_parameter',
+            'message': 'Release parameter:',
+            'default': '0.5'
+        },
+        {
+            'type': 'input',
             'name': 'time_limit',
             'message': 'Time limit:',
             'default': '5'
@@ -163,6 +169,7 @@ def get_inputs():
         'initial_order_release': int(answers['initial_order_release']),
         'rearrangement_parameter': float(answers['rearrangement_parameter']),
         'threshold_parameter': float(answers['threshold_parameter']),
+        'release_parameter': float(answers['release_parameter']),
         'time_limit': int(answers['time_limit']),
         'selection_rule': answers['selection_rule'],
     }
