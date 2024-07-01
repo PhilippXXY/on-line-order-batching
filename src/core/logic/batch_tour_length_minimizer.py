@@ -4,6 +4,7 @@ import time
 import uuid
 
 from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
+from src.core.logic.join_item_information import join_item_id_and_position_csv
 
 def create_start_batches(orders, max_batch_size):
     """
@@ -57,7 +58,7 @@ def generate_unique_id():
     return uuid.uuid4().hex
 
 
-def iterated_local_search(s_initial, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit):
+def iterated_local_search(s_initial, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit):
     """
     This function is the main function of the adapted Iterated Local Search Algorithm by Henn. The naming of the variables is based on another paper by Henn.
 

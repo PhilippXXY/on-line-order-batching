@@ -1,4 +1,5 @@
 import pandas as pd
+from src.core.logic.join_item_information import join_item_id_and_position_csv
 import src.vars.shared_variables as shared_variables
 
 
@@ -24,6 +25,15 @@ def get_warehouse_layout():
         'max_z_position': max_z_position,
     }
     return warehouse_layout
+
+def get_warehouse_layout_path():
+    '''
+    Get the warehouse layout path from the shared variables
+
+    :return: warehouse_layout_path
+    '''
+    warehouse_layout_path = shared_variables.variables.get('warehouse_layout_path')
+    return warehouse_layout_path
 
 
 def get_max_batch_size():
@@ -111,7 +121,16 @@ def get_new_order():
 
     :return: order
     '''
-    new_order = shared_variables.orders.pop(0)    
+    # Get the new order and remove it from the list
+    new_order = shared_variables.orders.pop(0)
+    # Add to each item the absolute position in the warehouse
+    for item in new_order['items']:
+        item_id = item['item_id']
+        item_data = join_item_id_and_position_csv(get_warehouse_layout_path(), item_id)
+        item['abs_x_position'] = item_data['abs_x_position']
+        item['abs_y_position'] = item_data['abs_y_position']
+        item['abs_z_position'] = item_data['abs_z_position']
+
     return new_order
 
 

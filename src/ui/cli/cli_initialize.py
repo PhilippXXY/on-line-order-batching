@@ -112,26 +112,26 @@ def get_inputs():
         {
             'type': 'input',
             'name': 'rearrangement_parameter',
-            'message': 'Rearrangement parameter:',
+            'message': 'Rearrangement parameter [0;1]:',
             'default': '0.5'
         },
         {
             'type': 'input',
             'name': 'threshold_parameter',
-            'message': 'Threshold parameter:',
+            'message': 'Threshold parameter [0;1]:',
             'default': '0.5'
         },
         {
             'type': 'input',
             'name': 'release_parameter',
-            'message': 'Release parameter:',
+            'message': 'Release parameter [0;1]:',
             'default': '0.5'
         },
         {
             'type': 'input',
             'name': 'time_limit',
             'message': 'Time limit:',
-            'default': '5'
+            'default': '1'
         },
         {
             'type': 'list',
