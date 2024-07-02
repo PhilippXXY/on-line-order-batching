@@ -28,17 +28,17 @@ class CLIThread(threading.Thread):
         debug_mode = shared_variables.variables.get('debug_mode')
         # If debug mode is enabled, print the variables
         if debug_mode:
-            click.echo(f'CLIThread initialized with variables: {self.variables}\n')
+            click.secho(f'CLIThread initialized with variables: {self.variables}\n', fg='yellow')
         # Set the input process to running
         shared_variables.variables['input_process_running'] = True
         # If debug mode is enabled, print a message
         if debug_mode:
-            click.echo(f'Amount of orders to release: {shared_variables.variables.get("initial_order_release")}\n')
+            click.secho(f'Amount of orders to release: {shared_variables.variables.get("initial_order_release")}\n', fg='yellow')
         # Release the starting orders based on the initial order release variable
         for i in range(shared_variables.variables.get('initial_order_release')):
             # Release an order
             if debug_mode:
-                click.echo(f'#{i}')
+                click.secho(f'#{i}', fg='yellow')
             release_order = self.release_order()
             # If there are no more orders to release, break the loop
             if release_order == None:
@@ -54,7 +54,7 @@ class CLIThread(threading.Thread):
         try:
             # If debug mode is enabled, print a message
             if debug_mode:
-                click.echo('CLIThread running\n')
+                click.secho('CLIThread running\n', fg='yellow')
             # Update the shared variables with the variables of the thread
             shared_variables.variables.update(self.variables)
             # If debug mode is enabled, print a message
@@ -64,7 +64,7 @@ class CLIThread(threading.Thread):
         # Finally, print a message that the run method has completed
         finally:
             if debug_mode:
-                click.echo('CLIThread run method completed')
+                click.secho('CLIThread run method completed', fg='yellow')
 
 
     def get_picker_state(self):
@@ -102,7 +102,7 @@ class CLIThread(threading.Thread):
                 shared_variables.orders.append(order)
                 # If debug mode is enabled, print a message
                 if shared_variables.variables.get('debug_mode'):
-                    click.echo(f'Order released: {order}\n')
+                    click.secho(f'Order released: {order}\n', fg = 'yellow')
                 return order
             # If there are no more orders in the imported orders
             else:

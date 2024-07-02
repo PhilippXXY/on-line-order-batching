@@ -2,6 +2,7 @@ import time
 import click
 import keyboard
 from tabulate import tabulate
+from src.vars import shared_variables
 from ui.cli_controller import get_picker_state, get_batches_to_select, release_order
 
 # Define the buttons for the program
@@ -19,7 +20,12 @@ last_release_time = 0
 last_end_time = 0
 
 def runtime():
+    if shared_variables.variables.get('debug_mode'):
+        click.echo('CLI Runtime has been started.\n')
     # While loop to keep the program running until the user presses the end button
+    time.sleep(10)
+    end_program = True
+    shared_variables.variables.update({'input_process_running': False})
     while not end_program:
         # Check if the picker state has changed and the picker is now not available anymore
         if (picker_state != get_picker_state_local()) and not get_picker_state_local():

@@ -30,9 +30,9 @@ def initialize(ctx, debug_mode):
     variables = get_inputs()
     # Print the inputs for debug mode
     if debug_mode_global:
-        click.echo('The inputs are: ')
+        click.secho('The inputs are: ', fg='yellow')
         for key, value in variables.items():
-            click.echo(f'{key}: {value}')
+            click.secho(f'{key}: {value}', fg='yellow')
         click.echo('\n')
     # Display the manual of the program
     program_manual()
@@ -69,19 +69,16 @@ def display_welcome_message():
     click.echo('This program is designed to improve the makespan of on-line order batching in a single picker warehouse.')
     click.echo('It is based on the ' + click.style(create_hyperlink('Paper by Sebastian Henn', hyperlink_paper_henn), fg='cyan') + '.')
     click.echo('\n')
-
     # Display information for debug mode
     if debug_mode_global:
-        click.echo('You are running the program in '+ click.style('debug', fg='green')+ ' mode. This means that you will see additional information and messages.')
-        click.echo('\n')
+        click.secho('You are running the program in debug mode. This means that you will see additional information and messages.\n', fg='yellow')
 
 def get_inputs():
     '''
     This function gets the inputs from the user and stores them in the global variables. 
     '''
     # Give the user instructions
-    click.echo("Please provide the following inputs, as they are required to run the program. If you want to use the default values, just press Enter.")
-    click.echo('\n')
+    click.echo("Please provide the following inputs, as they are required to run the program. If you want to use the default values, just press Enter. \n")
     
     # Define the questions
     questions = [
@@ -221,7 +218,7 @@ def duplicate_orders_to_py(order_path):
         file.write('imported_orders = ' + str(orders) + '\n')
     # Print a message for debug mode
     if debug_mode_global:
-        click.echo(f'The orders were duplicated to the file imported_orders.py. The orders are: {orders} \n')
+        click.secho(f'The orders were duplicated to the file imported_orders.py. The orders are: {orders} \n', fg='yellow')
 
 if __name__ == '__main__':
     initialize()
