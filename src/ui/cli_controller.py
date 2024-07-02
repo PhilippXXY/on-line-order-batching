@@ -3,6 +3,7 @@ import time
 import uuid
 
 import click
+from src.ui.cli.cli_runtime import runtime
 import src.vars.shared_variables as shared_variables
 import src.ui.imported_orders as imported_orders
 
@@ -41,9 +42,8 @@ class CLIThread(threading.Thread):
                 click.secho(f'#{i}', fg='yellow')
             release_order = self.release_order()
             # If there are no more orders to release, break the loop
-            if release_order == None:
+            if release_order is None:
                 break
-
 
     def run(self):
         '''
@@ -57,8 +57,9 @@ class CLIThread(threading.Thread):
                 click.secho('CLIThread running\n', fg='yellow')
             # Update the shared variables with the variables of the thread
             shared_variables.variables.update(self.variables)
-            # If debug mode is enabled, print a message
-        # Catch exceptions	
+            # Call the runtime method
+            runtime()
+        # Catch exceptions
         except Exception as e:
             click.echo(f'CLIThread encountered an error: {e}')
         # Finally, print a message that the run method has completed
@@ -66,22 +67,6 @@ class CLIThread(threading.Thread):
             if debug_mode:
                 click.secho('CLIThread run method completed', fg='yellow')
 
-
-    def get_picker_state(self):
-        '''
-        Get the picker state from the shared variables
-
-        :return: Picker state
-        '''
-        return shared_variables.variables.get('picker_state', None)
-
-    def get_batches_to_select(self):
-        '''
-        Get the batches to select from the shared variables
-
-        :return: Batches to select
-        '''
-        return shared_variables.variables.get('batches_to_select', None)
 
     def release_order(self):
         '''
@@ -123,4 +108,3 @@ def generate_unique_id():
     :return: Unique ID
     '''
     return uuid.uuid4()
-    

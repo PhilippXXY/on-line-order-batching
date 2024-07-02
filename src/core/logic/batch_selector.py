@@ -82,7 +82,7 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, wa
         click.echo(f'Error in order_picking_decision_point_ab: {e}')
         return batches, release_time
 
-def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit):
+def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit):
     '''
     This function is called when the order picking decision point C is reached.
     It returns the batches after applying the iterated local search algorithm.
@@ -98,7 +98,7 @@ def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, rea
 
     batches = create_start_batches(orders, max_batch_size)
     # Apply the iterated local search algorithm to the batches
-    batches = iterated_local_search(batches, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit)
+    batches = iterated_local_search(batches, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit)
     # Add the release time to the batches
     for batch in batches:
         # Set the release time to the current time

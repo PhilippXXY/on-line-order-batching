@@ -35,6 +35,9 @@ def main(ctx, debug_mode):
         cli_thread.join()
         logic_thread.start()
         logic_thread.join()
+
+        if debug_mode:
+            click.secho('Both CLI and Logic threads have finished execution.\n', fg='yellow')
     else:
         # Print a message that the program initialization was aborted
         click.echo("Program initialization was aborted.")

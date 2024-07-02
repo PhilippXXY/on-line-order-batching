@@ -112,7 +112,7 @@ class LogicThread(threading.Thread):
 
              # Loops while the input process is running
             while input_process_running:
-                
+                print('input_process_running:', input_process_running)
                 # Check if a new order is available
                 if is_new_order_available():
                     # Get the new order
@@ -152,8 +152,10 @@ class LogicThread(threading.Thread):
                 input_process_running = get_input_process_running()
             
             # As the input process is finished, the last batches are sorted and released
+            # Get the last order
+            order = get_new_order()
             # Sort the last existing batches and release them sequentially
-            current_sorted_batches = last_order_arrives(order, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit, orders)
+            current_sorted_batches = last_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, orders)
             # Loops after the input process is finished to process the remaining batches
             while len(current_sorted_batches) > 0:
                 # Check if the current picking process has already started

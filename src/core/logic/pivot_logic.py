@@ -1,6 +1,7 @@
 import time
 from src.core.logic.batch_selector import order_picking_decision_point_ab, order_picking_decision_point_c
 from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
+from src.vars import shared_variables
 
 def initial_orders_arrived(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule):
     '''
@@ -41,7 +42,7 @@ def new_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_
     batches = order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, release_parameter, selection_rule)
     return batches
 
-def last_order_arrives(order, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit, orders):
+def last_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, orders):
     '''
     This function is called when the last order arrives.
 
@@ -57,7 +58,7 @@ def last_order_arrives(order, max_batch_size, warehouse_layout, rearrangement_pa
     # Add the order to the list of orders
     orders.append(order)
     # Get sorted batches with their release time
-    batches = order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit)
+    batches = order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit)
     return batches
 
 def picker_starts_tour(batch, warehouse_layout):
@@ -72,10 +73,10 @@ def picker_starts_tour(batch, warehouse_layout):
     start_time = time.time()
     # Get the tour length
     tour_length , batches = calculate_tour_length_s_shape_routing(batch, warehouse_layout)
-    # Calculate the tour time assuming 1 second per 5 warehouse units
-    tour_time = tour_length / 5
+    # Calculate the tour time according to the predefined units per second
+    tour_time = tour_length / shared_variables.variables['tour_length_units_per_second']
     # Arrival time assuming 1 second per 5 warehouse units
     arrival_time = start_time + tour_time
-
+    
     # Return start time and arrival time
     return batch, start_time, arrival_time

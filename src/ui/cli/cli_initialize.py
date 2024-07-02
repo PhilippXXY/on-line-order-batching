@@ -108,6 +108,13 @@ def get_inputs():
         },
         {
             'type': 'input',
+            'name': 'tour_length_units_per_second',
+            'message': 'Tour length units per Second:',
+            'default': '20'
+
+        },
+        {
+            'type': 'input',
             'name': 'rearrangement_parameter',
             'message': 'Rearrangement parameter [0;1]:',
             'default': '0.5'
@@ -164,6 +171,7 @@ def get_inputs():
         'warehouse_layout_path': answers['warehouse_layout_path'],
         'max_batch_size': int(answers['max_batch_size']),
         'initial_order_release': int(answers['initial_order_release']),
+        'tour_length_units_per_second': int(answers['tour_length_units_per_second']),
         'rearrangement_parameter': float(answers['rearrangement_parameter']),
         'threshold_parameter': float(answers['threshold_parameter']),
         'release_parameter': float(answers['release_parameter']),
