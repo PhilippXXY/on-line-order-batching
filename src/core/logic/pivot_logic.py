@@ -70,8 +70,12 @@ def picker_starts_tour(batch, warehouse_layout):
     '''
     # Start the tour
     start_time = time.time()
+    # Get the tour length
+    tour_length , batches = calculate_tour_length_s_shape_routing(batch, warehouse_layout)
+    # Calculate the tour time assuming 1 second per 5 warehouse units
+    tour_time = tour_length / 5
     # Arrival time assuming 1 second per 5 warehouse units
-    arrival_time = start_time + calculate_tour_length_s_shape_routing(batch['orders'], warehouse_layout) / 5
+    arrival_time = start_time + tour_time
 
     # Return start time and arrival time
     return batch, start_time, arrival_time

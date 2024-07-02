@@ -131,7 +131,7 @@ def get_inputs():
             'type': 'input',
             'name': 'time_limit',
             'message': 'Time limit:',
-            'default': '1'
+            'default': '0.5'
         },
         {
             'type': 'list',
@@ -170,7 +170,7 @@ def get_inputs():
         'rearrangement_parameter': float(answers['rearrangement_parameter']),
         'threshold_parameter': float(answers['threshold_parameter']),
         'release_parameter': float(answers['release_parameter']),
-        'time_limit': int(answers['time_limit']),
+        'time_limit': float(answers['time_limit']),
         'selection_rule': answers['selection_rule'],
     }
 

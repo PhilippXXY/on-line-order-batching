@@ -140,8 +140,9 @@ def is_new_order_available():
 
     :return: new_order_available: True if a new order is available, False otherwise
     '''
-    if get_new_order() is not None:
+    if shared_variables.orders.__len__() > 0:
         new_order_available = True
     else:
         new_order_available = False
+
     return new_order_available

@@ -100,38 +100,46 @@ class LogicThread(threading.Thread):
             orders = [get_new_order() for _ in range(initial_order_release)]
             # Create a batch for the initial order release
             current_sorted_batches = initial_orders_arrived(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule)
-            #print(current_sorted_batches)
+            # Remove batches with empty orders
+            current_sorted_batches = [batch for batch in current_sorted_batches if len(batch['orders']) > 0]
+
             # Loops while the input process is running
             while input_process_running:
                 # Check if a new order is available
                 if is_new_order_available():
                     # Get the new order
                     order = get_new_order()
+                    print(order)
                     # Pass the new order and receive batches with release times
                     current_sorted_batches = new_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, initial_order_release, selection_rule, orders)
+                    # Remove batches with empty orders
+                    current_sorted_batches = [batch for batch in current_sorted_batches if len(batch['orders']) > 0]
                 else:
                     # Check if the current picking process has already started
                     if current_picking_process_arrival_time > time.time():
-                        break
+                        continue
                     else:
+                        while_flag = True
+                        while while_flag:
                         # Iterate over the sorted batches
-                        for batch in current_sorted_batches:
-                            # Check if the batch is ready to be picked
-                            if batch['release_time'] < time.time():
-                                current_picking_batch, current_picking_process_start_time, current_picking_process_arrival_time = picker_starts_tour(batch, warehouse_layout)
-                                current_sorted_batches.remove(batch)
-
-                                # Store the current batch in the shared variables
-                                shared_variables.variables['current_picking_batch'] = current_picking_batch
-                                # Store the current picking process start time in the shared variables
-                                shared_variables.variables['current_picking_process_start_time'] = current_picking_process_start_time
-                                # Store the current picking process arrival time in the shared variables
-                                shared_variables.variables['current_picking_process_arrival_time'] = current_picking_process_arrival_time
-                                # As the batch is picked, break the loop
-                                break
+                            for batch in current_sorted_batches:
+                                # Check if the batch is ready to be picked
+                                if batch['release_time'] < time.time():
+                                    current_picking_batch, current_picking_process_start_time, current_picking_process_arrival_time = picker_starts_tour(batch, warehouse_layout)
+                                    current_sorted_batches.remove(batch)
+                                    # Store the current batch in the shared variables
+                                    shared_variables.variables['current_picking_batch'] = current_picking_batch
+                                    # Store the current picking process start time in the shared variables
+                                    shared_variables.variables['current_picking_process_start_time'] = current_picking_process_start_time
+                                    # Store the current picking process arrival time in the shared variables
+                                    shared_variables.variables['current_picking_process_arrival_time'] = current_picking_process_arrival_time
+                                    # As the batch is picked, break the loop
+                                    while_flag = False
 
                 # Update the input process running variable
                 input_process_running = get_input_process_running()
+                if shared_variables.variables.get('debug_mode'):
+                    click.echo(f'Checked for orders in logic controller: {input_process_running} at time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n')
 
             # As the input process is finished, the last batches are sorted and released
             # Sort the last existing batches and release them sequentially

@@ -116,7 +116,6 @@ def sort_batches_by_selection_rules(batches, warehouse_layout, selection_rule):
     :param selection_rule: selection rule to be applied
     :return: list of sorted batches
     '''
-    print('Selection rulesss:', selection_rule)
     if selection_rule == 'SHORT' or selection_rule == 'short':
         batches = selection_rule_short(batches, warehouse_layout)
     elif selection_rule == 'LONG' or selection_rule == 'long':
