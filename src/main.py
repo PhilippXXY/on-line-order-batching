@@ -32,8 +32,8 @@ def main(ctx, debug_mode):
 
         # Start the threads
         cli_thread.start()
-        cli_thread.join()
         logic_thread.start()
+        cli_thread.join()
         logic_thread.join()
 
         if debug_mode:
