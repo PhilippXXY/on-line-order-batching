@@ -27,9 +27,6 @@ class CLIThread(threading.Thread):
 
         # Set the debug mode
         debug_mode = shared_variables.variables.get('debug_mode')
-        # If debug mode is enabled, print the variables
-        if debug_mode:
-            click.secho(f'CLIThread initialized with variables: {self.variables}\n', fg='yellow')
         # Set the input process to running
         shared_variables.variables['input_process_running'] = True
         # If debug mode is enabled, print a message
@@ -64,6 +61,8 @@ class CLIThread(threading.Thread):
             click.echo(f'CLIThread encountered an error: {e}')
         # Finally, print a message that the run method has completed
         finally:
+            # Set the input process to not running
+            shared_variables.variables['input_process_running'] = False
             if debug_mode:
                 click.secho('CLIThread run method completed', fg='yellow')
 
@@ -107,4 +106,4 @@ def generate_unique_id():
 
     :return: Unique ID
     '''
-    return uuid.uuid4()
+    return uuid.uuid4().hex

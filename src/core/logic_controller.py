@@ -30,9 +30,6 @@ class LogicThread(threading.Thread):
         self.event = event
         # Set the variables
         self.variables = variables
-        # If debug mode is enabled, print the variables
-        if shared_variables.variables.get('debug_mode'):
-            click.secho(f'LogicThread initialized with variables: {self.variables}\n', fg='yellow')
 
     
     def run(self):
@@ -90,7 +87,7 @@ class LogicThread(threading.Thread):
 
             # If debug mode is enabled, print the variables
             if shared_variables.variables.get('debug_mode'):
-                click.secho(f'LogicThread variables: {variables}\n', fg='yellow')
+                click.secho(f'Variables passed to LogicThread from shared variables: {variables}\n', fg='yellow')
             
             orders = []
             current_sorted_batches = []
@@ -110,9 +107,15 @@ class LogicThread(threading.Thread):
                 click.secho('Initial batches:', fg='yellow')
                 debug_print_batches(current_sorted_batches)
 
-             # Loops while the input process is running
+            # Loops while the input process is running
             while input_process_running:
-                print('input_process_running:', input_process_running)
+                # Check if for the current batch the picking process has already ended
+                if time.time() < current_picking_process_arrival_time:
+                    # Set the picker state to False (not available)
+                    shared_variables.picker_state = False
+                else:
+                    # Set the picker state to True (available)
+                    shared_variables.picker_state = True
                 # Check if a new order is available
                 if is_new_order_available():
                     # Get the new order
@@ -120,7 +123,7 @@ class LogicThread(threading.Thread):
                     if shared_variables.variables.get('debug_mode'):
                         click.secho(f'New order arrived: {order} at time: {time.strftime("%Y-%m-%d %H:%M:%S")}\n', fg='yellow')
                     # Pass the new order and receive batches with release times
-                    current_sorted_batches = new_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, initial_order_release, selection_rule, orders)
+                    current_sorted_batches = new_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule, orders)
                     # Remove batches with empty orders
                     current_sorted_batches = [batch for batch in current_sorted_batches if len(batch['orders']) > 0]
                 else:
@@ -141,10 +144,6 @@ class LogicThread(threading.Thread):
                                 shared_variables.variables['current_picking_process_start_time'] = current_picking_process_start_time
                                 # Store the current picking process arrival time in the shared variables
                                 shared_variables.variables['current_picking_process_arrival_time'] = current_picking_process_arrival_time
-                                # Log the picked batch
-                                if shared_variables.variables.get('debug_mode'):
-                                    click.secho('Picked batch:', fg='yellow')
-                                    debug_print_batches([current_picking_batch])
                                 break
                 # Avoid busy waiting
                 time.sleep(0.1)
@@ -155,7 +154,7 @@ class LogicThread(threading.Thread):
             # Get the last order
             order = get_new_order()
             # Sort the last existing batches and release them sequentially
-            current_sorted_batches = last_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, orders)
+            current_sorted_batches = last_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule, orders)
             # Loops after the input process is finished to process the remaining batches
             while len(current_sorted_batches) > 0:
                 # Check if the current picking process has already started
@@ -182,6 +181,7 @@ class LogicThread(threading.Thread):
                             break
         except Exception as e:
             print(f'Logic function encountered an error: {e}')
+
 
 def debug_print_batches(current_sorted_batches):
     '''

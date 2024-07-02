@@ -82,7 +82,7 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, wa
         click.echo(f'Error in order_picking_decision_point_ab: {e}')
         return batches, release_time
 
-def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit):
+def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, selection_rule, time_limit):
     '''
     This function is called when the order picking decision point C is reached.
     It returns the batches after applying the iterated local search algorithm.

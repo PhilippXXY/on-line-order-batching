@@ -1,6 +1,7 @@
+import datetime
 import time
 from src.core.logic.batch_selector import order_picking_decision_point_ab, order_picking_decision_point_c
-from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
+from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing, sort_and_transform_batch_s_shape_routing
 from src.vars import shared_variables
 
 def initial_orders_arrived(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule):
@@ -21,7 +22,7 @@ def initial_orders_arrived(orders, max_batch_size, warehouse_layout, warehouse_l
     batches = order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule)
     return batches
 
-def new_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, release_parameter, selection_rule, orders):
+def new_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule, orders):
     '''
     This function is called when a new order arrives.
 
@@ -39,10 +40,10 @@ def new_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_
     # Add the order to the list of orders
     orders.append(order)
     # Get sorted batches with their release time
-    batches = order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, release_parameter, selection_rule)
+    batches = order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule)
     return batches
 
-def last_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, orders):
+def last_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, selection_rule, orders):
     '''
     This function is called when the last order arrives.
 
@@ -77,6 +78,18 @@ def picker_starts_tour(batch, warehouse_layout):
     tour_time = tour_length / shared_variables.variables['tour_length_units_per_second']
     # Arrival time assuming 1 second per 5 warehouse units
     arrival_time = start_time + tour_time
+    # Batch sorted by S-Shape-Routing
+    batch['sorted_batch_s_shape_routing'] = sort_and_transform_batch_s_shape_routing(batch)
+    # Add the amount of orders to the batch
+    batch['amount_of_orders'] = len(batch['orders'])
+    # Add the amount of items to the batch
+    batch['amount_of_items'] = sum([len(order['items']) for order in batch['orders']])
+    # Add the tour length to the batch
+    batch['tour_length'] = tour_length
+    # Add the start time to the batch
+    batch['start_time'] = start_time
+    # Add the arrival time to the batch
+    batch['arrival_time'] = arrival_time
     
     # Return start time and arrival time
     return batch, start_time, arrival_time

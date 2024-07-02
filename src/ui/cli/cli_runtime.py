@@ -12,9 +12,6 @@ def runtime():
     '''
     This function is working as the runtime for the CLI. It is responsible for the interaction with the user and the picker.
     '''
-    # Print a message to indicate that the CLI runtime has been started
-    if shared_variables.variables.get('debug_mode'):
-        click.echo('CLI Runtime has been started.\n')
     # Update the shared variables to indicate that the input process is running
     shared_variables.variables.update({'input_process_running': True})
 
@@ -39,21 +36,12 @@ def runtime():
         # Check if the logic function has populated the shared variables with the necessary data
         current_picking_batch = shared_variables.variables.get('current_picking_batch')
         if current_picking_batch is not None:
+            #print(get_picker_state())
             # Check if the picker state has changed and the picker is now not available anymore
             if (picker_state != get_picker_state()) and not get_picker_state():
-                print('Inside the if statement')
-                # Get the new batch that will be picked next
-                print(shared_variables.variables)
-                print(get_batches_to_select())
                 batch_to_select = get_batches_to_select()
-                click.echo("--- New Batch to select ---")
-                click.echo(f"Batch ID: {batch_to_select['batch_id']} ― Tour length: {batch_to_select['tour_length']}")
-                # Prepare the table
-                table_data = [[item['item_id'], item['abs_x_position'], item['abs_y_position'], item['abs_z_position']] for item in batch_to_select['items']]
-                headers = ["Item ID", "Aisle No.", "Y Position", "Z Position"]
-                # Print table using tabulate
-                click.echo(tabulate(table_data, headers=headers, tablefmt="simple_grid"))
-
+                print_batch_to_select(batch_to_select)
+                
         # Update the picker state
         picker_state = get_picker_state()
 
@@ -75,7 +63,7 @@ def runtime():
                 shared_variables.variables.update({'input_process_running': False})
 
         # Avoid too high CPU usage
-        time.sleep(0.1)
+        time.sleep(0.05)
 
     # Print a message to indicate that the program will be terminated
     click.echo('The program was terminated by the user. It will shut down after the picker has finished all existing orders.')
@@ -165,3 +153,66 @@ def generate_unique_id():
     :return: Unique ID
     '''
     return uuid.uuid4().hex
+
+
+def print_batch_to_select(batch):
+    '''
+    Print the batch to the console
+
+    :param batch: Batch to be printed
+    '''
+    # Convert the batch structure to a table
+    table = []
+    # Get the batch ID
+    batch_id = batch['batch_id']
+    # Get the items sorted by S-Shape-Routing
+    batch_sorted_items = batch['sorted_batch_s_shape_routing']
+    # Get the amount of orders
+    batch_amount_of_orders = batch['amount_of_orders']
+    # Get the amount of items
+    batch_amount_of_items = batch['amount_of_items']
+    # Get the tour length
+    batch_tour_length = batch['tour_length']
+    # Get the start time and convert it to a readable format
+    batch_start_time = datetime.datetime.fromtimestamp(batch['start_time']).strftime('%H:%M:%S.%f')[:-5]
+    # Get the arrival time and convert it to a readable format
+    batch_arrival_time = datetime.datetime.fromtimestamp(batch['arrival_time']).strftime('%H:%M:%S.%f')[:-5]
+    # Initialize the orders
+    orders = []
+    # Iterate over the orders
+    for order in batch['orders']:
+        # Get the order ID
+        order_id = order['order_id']
+        # Initialize the items
+        items = []
+        # Iterate over the items
+        if 'items' in order:
+            for item in order['items']:
+                # Get the item ID, X, Y, and Z position
+                item_id = item['item_id']
+                abs_x_position = item['abs_x_position']
+                abs_y_position = item['abs_y_position']
+                abs_z_position = item['abs_z_position']
+                # Append the item to the items list
+                items.append(f"Item ID: {item_id}, X: {abs_x_position}, Y: {abs_y_position}, Z: {abs_z_position}")
+        # Append the order to the orders list
+        orders.append(f"Order ID: {order_id}\n" + "\n".join(items))
+    # Append the batch ID and the orders to the table
+    table.append([f"Batch ID: {batch_id}", "\n\n".join(orders)])
+    # Add the items sorted by S-Shape-Routing to the table so that the picker can see the items in the order they should be picked
+    sorted_items_table = "\n".join([f"Item ID: {item['item_id']}, X: {item['abs_x_position']}, Y: {item['abs_y_position']}, Z: {item['abs_z_position']}" for item in batch_sorted_items])
+    table.append(['Items sorted by S-Shape-Routing:', sorted_items_table])
+    # Add the amount of orders to the table
+    table.append(['Amount of Orders:', batch_amount_of_orders])
+    # Add the amount of items to the table
+    table.append(['Amount of Items:', batch_amount_of_items])
+    # Add the tour length to the table
+    table.append(['Tour Length in warehouse units:', batch_tour_length])
+    # Add the start time to the table
+    table.append(['Start Time:', batch_start_time])
+    # Add the arrival time to the table
+    table.append(['Arrival Time:', batch_arrival_time])
+    # Print the table
+    click.echo('--- Batch to select ---')
+    click.echo(tabulate(table, tablefmt='simple_grid'))
+    click.echo('\n')
