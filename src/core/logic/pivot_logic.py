@@ -37,11 +37,32 @@ def new_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_
     :param orders: list of orders
     :return: list of batches with their release time
     '''
+    print('New order arrives')
     # Add the order to the list of orders
     orders.append(order)
     # Get sorted batches with their release time
     batches = order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule)
     return batches
+
+
+def one_batch_available(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule):
+    '''
+    This function is called when only one batch is available.
+
+    :param orders: list of orders
+    :param max_batch_size: maximum batch size
+    :param warehouse_layout: dictionary containing the warehouse layout information
+    :param warehouse_layout_path: path to the warehouse layout
+    :param rearrangement_parameter: parameter for the rearrangement of the batches
+    :param threshold_parameter: parameter for the threshold of the batches
+    :param release_parameter: parameter for the release of the batches
+    :param selection_rule: selection rule for the batches
+    :return: list of batches with their release time
+    '''
+    # Get sorted batches with their release time
+    batches = order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule)
+    return batches
+
 
 def last_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, selection_rule, orders):
     '''
@@ -59,7 +80,7 @@ def last_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout
     # Add the order to the list of orders
     orders.append(order)
     # Get sorted batches with their release time
-    batches = order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit)
+    batches = order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, selection_rule, time_limit)
     return batches
 
 def picker_starts_tour(batch, warehouse_layout):

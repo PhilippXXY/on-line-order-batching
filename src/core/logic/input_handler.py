@@ -48,7 +48,7 @@ def get_max_batch_size():
 
 def get_initial_order_release():
     '''
-    Get the initial order release from the shared variables
+    Get the amount of initial orders releases from the shared variables
 
     :return: initial_order_release
     '''
@@ -122,16 +122,19 @@ def get_new_order():
     :return: order
     '''
     # Get the new order and remove it from the list
-    new_order = shared_variables.orders.pop(0)
-    # Add to each item the absolute position in the warehouse
-    for item in new_order['items']:
-        item_id = item['item_id']
-        item_data = join_item_id_and_position_csv(get_warehouse_layout_path(), item_id)
-        item['abs_x_position'] = item_data['abs_x_position']
-        item['abs_y_position'] = item_data['abs_y_position']
-        item['abs_z_position'] = item_data['abs_z_position']
+    if shared_variables.orders:
+        new_order = shared_variables.orders.pop(0)
+        # Add to each item the absolute position in the warehouse
+        for item in new_order['items']:
+            item_id = item['item_id']
+            item_data = join_item_id_and_position_csv(get_warehouse_layout_path(), item_id)
+            item['abs_x_position'] = item_data['abs_x_position']
+            item['abs_y_position'] = item_data['abs_y_position']
+            item['abs_z_position'] = item_data['abs_z_position']
 
-    return new_order
+        return new_order
+    else:
+        return None
 
 
 def is_new_order_available():

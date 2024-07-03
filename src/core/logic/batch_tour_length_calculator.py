@@ -10,45 +10,50 @@ def calculate_tour_length_s_shape_routing(batch, warehouse_layout):
 
     :param batch: A list of dictionaries, each containing 'id', 'abs_x_position', 'abs_y_position', and 'abs_z_position'.
     :param warehouse_layout: A dictionary containing the warehouse layout information.
-    :return: The total tour length of the batch.
+    :return: The total tour length of the batch, and the sorted batch.
+
     '''
     global direction
     direction = True
+    try:
+        # Sort the batch by the x-coordinate, y-coordinate, and z-coordinate
+        sorted_batch = sort_and_transform_batch_s_shape_routing(batch)
+        #Store the warehouse layout information as a maximum y position and the maximum x position transformed. z position is not needed for the S-Shape routing
+        max_x_position_transformed = round(warehouse_layout['max_x_position']/2,0)
+        max_y_position = warehouse_layout['max_y_position']
+        max_z_position = warehouse_layout['max_z_position']
 
-    # Sort the batch by the x-coordinate, y-coordinate, and z-coordinate
-    sorted_batch = sort_and_transform_batch_s_shape_routing(batch)
-    #Store the warehouse layout information as a maximum y position and the maximum x position transformed. z position is not needed for the S-Shape routing
-    max_x_position_transformed = round(warehouse_layout['max_x_position']/2,0)
-    max_y_position = warehouse_layout['max_y_position']
-    max_z_position = warehouse_layout['max_z_position']
+        # Initialize the total tour length
+        total_tour_length = 0
+        # Initialize the current position	
+        starting_position = (0, -1) # The starting position is one unit below the first aisle
+        current_position = starting_position
 
-    # Initialize the total tour length
-    total_tour_length = 0
-    # Initialize the current position	
-    starting_position = (0, -1) # The starting position is one unit below the first aisle
-    current_position = starting_position
+        for i, item in enumerate(sorted_batch):
+            # Get the item position
+            item_position = (item['abs_x_position'], item['abs_y_position'])
 
-    for i, item in enumerate(sorted_batch):
-        # Get the item position
-        item_position = (item['abs_x_position'], item['abs_y_position'])
+            #calculate the distance to the next item
+            if i > 0 and (sorted_batch[i]['abs_x_position'], sorted_batch[i]['abs_y_position']) == (sorted_batch[i-1]['abs_x_position'], sorted_batch[i-1]['abs_y_position']):
+                # If the current item is the same as the previous item, skip it
+                distance=0
+            else:
+                # Calculate the distance between the current position and the item position
+                distance = calculate_distance_to_next_item(current_position, starting_position, item_position, max_y_position)
+            # Update the current position
+            current_position = item_position
+            # Update the total tour length
+            total_tour_length += distance
 
-        #calculate the distance to the next item
-        if i > 0 and (sorted_batch[i]['abs_x_position'], sorted_batch[i]['abs_y_position']) == (sorted_batch[i-1]['abs_x_position'], sorted_batch[i-1]['abs_y_position']):
-            # If the current item is the same as the previous item, skip it
-            distance=0
-        else:
-            # Calculate the distance between the current position and the item position
-            distance = calculate_distance_to_next_item(current_position, starting_position, item_position, max_y_position)
-        # Update the current position
-        current_position = item_position
+        #Calculate way back to the starting position
+        distance = calculate_distance_to_starting_position(current_position, starting_position)
         # Update the total tour length
         total_tour_length += distance
 
-    #Calculate way back to the starting position
-    distance = calculate_distance_to_starting_position(current_position, starting_position)
-    # Update the total tour length
-    total_tour_length += distance
-
+    except Exception as e:
+        print(f'calculate_tour_length_s_shape_routing encountered an error: {e}')
+        return None, None
+    
     return total_tour_length, sorted_batch
 
 
