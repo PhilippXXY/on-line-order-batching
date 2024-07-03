@@ -112,6 +112,9 @@ def iterated_local_search(s_initial, max_batch_size, warehouse_layout, warehouse
             # Set the flag
             is_optimal = True
 
+    # Remove empty batches
+    s_asterisk = [batch for batch in s_asterisk if batch['orders']]
+
     return s_asterisk
   
 
