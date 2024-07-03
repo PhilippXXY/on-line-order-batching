@@ -171,23 +171,20 @@ def local_search_swap(batches, max_batch_size, warehouse_layout):
                     incumbent_batch_tour_length, _ = calculate_tour_length_s_shape_routing(incumbent_batch, warehouse_layout)
                     neighbor_batch_tour_length, _ = calculate_tour_length_s_shape_routing(neighbor_batch, warehouse_layout)
 
-                    # Iterate over all pairs of orders
-                    for incumbent_order in list(incumbent_batch['orders']):
-                        for neighbor_order in list(neighbor_batch['orders']):
+                    # Iterate over all pairs of orders by index
+                    for incumbent_index, incumbent_order in enumerate(incumbent_batch['orders']):
+                        for neighbor_index, neighbor_order in enumerate(neighbor_batch['orders']):
                             # Create a copy of the batches to test the swap
                             temp_incumbent_batch = copy.deepcopy(incumbent_batch)
                             temp_neighbor_batch = copy.deepcopy(neighbor_batch)
 
-                            # Swap complete orders
-                            temp_incumbent_batch['orders'].remove(incumbent_order)
-                            temp_neighbor_batch['orders'].remove(neighbor_order)
-                            temp_incumbent_batch['orders'].append(neighbor_order)
-                            temp_neighbor_batch['orders'].append(incumbent_order)
+                            # Swap orders in their exact positions
+                            temp_incumbent_batch['orders'][incumbent_index] = neighbor_order
+                            temp_neighbor_batch['orders'][neighbor_index] = incumbent_order
 
                             # Ensure the batch sizes are within the maximum limit
                             if sum(len(order['items']) for order in temp_incumbent_batch['orders']) > max_batch_size or \
                                sum(len(order['items']) for order in temp_neighbor_batch['orders']) > max_batch_size:
-                                                                
                                 # Skip the swap
                                 continue
                             
