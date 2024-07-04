@@ -1,5 +1,7 @@
 import datetime
 import time
+import traceback
+import click
 from src.core.logic.batch_selector import order_picking_decision_point_ab, order_picking_decision_point_c
 from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing, sort_and_transform_batch_s_shape_routing
 from src.vars import shared_variables
@@ -76,10 +78,19 @@ def last_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout
     :param orders: list of orders
     :return: list of batches with their release time
     '''
+    
     # Add the order to the list of orders
     orders.append(order)
+    # Initialize the batches to an empty list
+    batches = []
     # Get sorted batches with their release time
-    batches = order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, selection_rule, time_limit)
+    try:
+        batches = order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, selection_rule, time_limit)
+    except Exception as e:
+        click.secho(f'Error in last_order_arrives: {e}', fg='red')
+        if shared_variables.variables.get('debug_mode'):
+            traceback.print_exc()
+
     return batches
 
 def picker_starts_tour(batch, warehouse_layout):

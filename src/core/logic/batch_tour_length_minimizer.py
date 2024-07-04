@@ -18,33 +18,36 @@ def create_start_batches(orders, max_batch_size):
     batches = []
     current_batch = []
     current_batch_size = 0
+    try:
+        # Assign the orders to the batches
+        for order in orders:
+            # Check if the order fits into the current batch
+            if len(order['items']) + current_batch_size <= max_batch_size:
+                # Add the order to the current batch
+                current_batch.append(order)
+                # Update the current batch size
+                current_batch_size += len(order['items'])
+            # If the order does not fit into the current batch
+            else:
+                # Add the current batch to the list of batches
+                batches.append({
+                    'batch_id': generate_unique_id(),
+                    'orders': current_batch
+                })
+                # Start a new batch
+                current_batch = [order]
+                current_batch_size = len(order['items'])
 
-    # Assign the orders to the batches
-    for order in orders:
-        # Check if the order fits into the current batch
-        if len(order['items']) + current_batch_size <= max_batch_size:
-            # Add the order to the current batch
-            current_batch.append(order)
-            # Update the current batch size
-            current_batch_size += len(order['items'])
-        # If the order does not fit into the current batch
-        else:
-            # Add the current batch to the list of batches
+        # Add the last batch to the list of batches    
+        if current_batch:
             batches.append({
                 'batch_id': generate_unique_id(),
                 'orders': current_batch
             })
-            # Start a new batch
-            current_batch = [order]
-            current_batch_size = len(order['items'])
-
-    # Add the last batch to the list of batches    
-    if current_batch:
-        batches.append({
-            'batch_id': generate_unique_id(),
-            'orders': current_batch
-        })
-
+    except Exception as e:
+        print(e)
+        import traceback
+        traceback.print_exc()
     return batches
 
 

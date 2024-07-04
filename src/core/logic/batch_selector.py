@@ -1,5 +1,6 @@
 import copy
 import time
+import traceback
 
 import click
 from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
@@ -94,6 +95,8 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, wa
     # Catch any exception that might occur
     except Exception as e:
         click.secho(f'Error in order_picking_decision_point_ab: {e}', fg='red')
+        if shared_variables.variables.get('debug_mode'):
+            click.secho(traceback.print_exc(), fg='red')
         return batches
 
 def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, selection_rule, time_limit):
@@ -109,12 +112,15 @@ def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, war
     :param time_limit: time limit for the iterated local search algorithm
     :return: list of batches
     '''
-    print('Order picking decision point C reached')
+    # Generate a set of batches by means of batching heuristic
     batches = create_start_batches(orders, max_batch_size)
     # Copy the batches to prevent the original batches from being changed
     copied_batches = copy.deepcopy(batches)
-    # Apply the iterated local search algorithm to the batches
-    batches = iterated_local_search(copied_batches, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit)
+    # Apply the iterated local search algorithm to the batches when more than one batch is available 
+    # As the iterated local search algorithm is only applicable to more than one batch
+    if len(batches) > 1:
+        # Apply the iterated local search algorithm to the batches
+        batches = iterated_local_search(copied_batches, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit)
     # Apply the selection rules
     ordered_for_picking_batches = sort_batches_by_selection_rules(batches, warehouse_layout, selection_rule)
     # Add the release time to the batches
