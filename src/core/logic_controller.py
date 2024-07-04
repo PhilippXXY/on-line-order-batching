@@ -1,4 +1,5 @@
 import copy
+import datetime
 import threading
 import time
 import traceback
@@ -145,7 +146,7 @@ class LogicThread(threading.Thread):
                     # Check if the current picking process has already started
                     if current_picking_process_arrival_time > time.time():
                         # Avoid busy waiting
-                        time.sleep(0.1)
+                        time.sleep(0.05)
                         continue
                     # If the current picking process has not started, start it with the next batch
                     else:
@@ -180,8 +181,8 @@ class LogicThread(threading.Thread):
                     
                                     # Print for debugging purposes
                                     if shared_variables.variables.get('debug_mode'):
-                                        click.secho(f'Current orders:', fg='yellow')
-                                        debug_print_orders(all_orders)
+                                        click.secho(f'Released batch with release time: {datetime.datetime.fromtimestamp(batch['release_time']).strftime('%H:%M:%S.%f')[:-5]} and arrival time: {datetime.datetime.fromtimestamp(current_picking_process_arrival_time).strftime('%H:%M:%S.%f')[:-5]}', fg='yellow')
+                                        debug_print_batches([batch])
                     
                                     break
 
@@ -192,7 +193,7 @@ class LogicThread(threading.Thread):
                 # Update the input process running variable
                 input_process_running = get_input_process_running()
                 # Avoid busy waiting
-                time.sleep(0.1)
+                time.sleep(0.05)
             
             # As the input process is finished, the last batches are sorted and released
             # Get the last order
@@ -238,8 +239,8 @@ class LogicThread(threading.Thread):
                             current_sorted_batches.remove(batch)
                             # Print for debugging purposes
                             if shared_variables.variables.get('debug_mode'):
-                                click.secho(f'Current orders:', fg='yellow')
-                                debug_print_orders(all_orders)
+                                click.secho(f'Released batch with release time: {datetime.datetime.fromtimestamp(batch['release_time']).strftime('%H:%M:%S.%f')[:-5]} and arrival time: {datetime.datetime.fromtimestamp(current_picking_process_arrival_time).strftime('%H:%M:%S.%f')[:-5]}', fg='yellow')
+                                debug_print_batches([batch])
                             break
 
                 # Update the amount of existing batches
@@ -247,7 +248,7 @@ class LogicThread(threading.Thread):
                 # Update the amount of existing orders
                 shared_variables.variables['amount_of_existing_orders'] = len(all_orders)
                 # Avoid busy waiting
-                time.sleep(0.1)
+                time.sleep(0.05)
 
         except Exception as e:
             click.secho(f'Logic function encountered an error: {e}', fg='red')

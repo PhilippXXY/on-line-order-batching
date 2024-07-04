@@ -60,35 +60,47 @@ def runtime():
             current_time = time.time()
             if current_time - last_end_time >= debounce_time:
                 last_end_time = current_time
-                # Set the flag to end the logic of the program
-                shared_variables.variables.update({'input_process_running': False})
                 # Print a message to indicate that the program will be terminated
                 click.secho('The user decided to hand over a last order to the system to pick.', fg='blue')
                 click.secho('The program will now pick the remaining batches and orders.\n\n', fg='blue')
                 # Release the last order
-                release_order()
+                release_last_order()
                 # Set the flag to end the cli program
+                # Set the flag to end the logic of the program
+                shared_variables.variables.update({'input_process_running': False})
                 end_input_process = True
 
         # Avoid too high CPU usage
         time.sleep(0.05)
 
+    # Wait until the last batches have been formed
+    # Otherwise the program would jump to the end before the last batches have been formed
+    while shared_variables.variables.get('last_batching_process_finished') is False:
+        time.sleep(0.01)
+        pass
 
-    while len(get_batches_to_select()) > 0:
-        # Check if the picker state has changed and the picker is now not available anymore
-        if (picker_state != get_picker_state()) and not get_picker_state():
-            # Get the new batch that will be picked next
+    # Get the amount of existing batches
+    amount_of_existing_batches = shared_variables.variables.get('amount_of_existing_batches')
+
+    # Run the picking process
+    while amount_of_existing_batches > 0:
+
+        if (picker_state != get_picker_state()) and get_picker_state():
             batch_to_select = get_batches_to_select()
             print_batch_to_select(batch_to_select)
-
+  
         # Update the picker state
         picker_state = get_picker_state()
 
-        # Avoid too high CPU usage
-        time.sleep(0.1)
+        # Update the amount of existing batches
+        amount_of_existing_batches = shared_variables.variables.get('amount_of_existing_batches')
 
+        # Avoid too high CPU usage
+        time.sleep(0.05)
+
+    
     # Print a message to indicate that the program has been shut down
-    click.secho('All the orders have been picked. The program will now be shut down.', fg='green')
+    click.secho('All the orders have been picked. The program will now be shut down.\n', fg='green')
 
 
 def get_picker_state():
@@ -142,6 +154,45 @@ def release_order():
     # Catch exceptions
     except Exception as e:
         click.secho(f'release_order encountered an error: {e}', fg='red')
+        if shared_variables.variables.get('debug_mode'):
+            traceback.print_exc()
+        return None
+    
+
+def release_last_order():
+    '''
+    Release the last order to the shared variables from the imported orders and remove it from the imported orders
+    '''
+    try:
+        # If there are still orders in the imported orders
+        if imported_orders.imported_orders:
+            # Pop the first order from the imported orders and store it in a variable
+            order = imported_orders.imported_orders.pop(0)
+            # Generate a unique order ID
+            order['order_id'] = generate_unique_id()
+            # Set the arrival time of the order to the current time
+            order['arrival_time'] = time.time()
+            # Update the shared variables with the released order
+            shared_variables.last_orders.append(order)
+            # Print the released order
+            click.echo(f"Last Order with the ID {order['order_id']} arrived at {datetime.datetime.fromtimestamp(order['arrival_time']).strftime('%H:%M:%S')} and is handed over to the batching process.")
+            click.echo('This is the last order to be picked. The program will now pick the remaining batches and orders.')
+            click.echo('This order contains the following items:')
+            table_data = [[item['item_id']] for item in order['items']]
+            headers = ['Item ID']
+            click.echo(tabulate(table_data, headers=headers, tablefmt='simple_grid'))
+            click.echo('\n')
+            return order
+        
+        # If there are no more orders in the imported orders
+        else:
+            # Print a message that there are no more orders to release
+            click.secho('No more orders to release', fg='red')
+            # Return None
+            return None
+    # Catch exceptions
+    except Exception as e:
+        click.secho(f'release_last_order encountered an error: {e}', fg='red')
         if shared_variables.variables.get('debug_mode'):
             traceback.print_exc()
         return None
