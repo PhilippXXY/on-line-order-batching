@@ -37,7 +37,6 @@ def new_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_
     :param orders: list of orders
     :return: list of batches with their release time
     '''
-    print('New order arrives')
     # Add the order to the list of orders
     orders.append(order)
     # Get sorted batches with their release time
