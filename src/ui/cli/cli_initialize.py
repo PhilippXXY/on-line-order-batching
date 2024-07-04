@@ -1,28 +1,39 @@
+import json
 import click
 from InquirerPy import prompt, inquirer
+from src.vars import shared_variables
 
 # Define the buttons for the program
 release_button = 'Space'
 end_button = 'Delete'
+# Define the global variables
+global debug_mode_global
 
 # Start the CLI program
 @click.command()
 @click.option('--debug-mode', '-d', is_flag=True, help='Run the program in debug mode.')
-def initialize(debug_mode):
+@click.pass_context
+def initialize(ctx, debug_mode):
     '''
     This function is the initializer function of the program. It initializes the program and gets the inputs from the user.
 
     :param debug_mode: A boolean value that indicates if the program should run in debug mode.
     '''
+    # Call the global variables
     global debug_mode_global
-
-    # Set the global debug_mode
     debug_mode_global = debug_mode
+    shared_variables.variables['debug_mode'] = debug_mode
 
     # Display the welcome message
     display_welcome_message()
     # Get the inputs from the user
     variables = get_inputs()
+    # Print the inputs for debug mode
+    if debug_mode_global:
+        click.secho('The inputs are: ', fg='yellow')
+        for key, value in variables.items():
+            click.secho(f'{key}: {value}', fg='yellow')
+        click.echo('\n')
     # Display the manual of the program
     program_manual()
 
@@ -30,9 +41,15 @@ def initialize(debug_mode):
     start_program = inquirer.confirm(message='Do you want to start the program with the provided inputs and release the orders?').execute()
     click.echo('\n')
     if start_program:
+        # Print a message for debug mode
+        if debug_mode_global:
+            click.secho('The user has decided to start the program. The program will now be started.\n', fg='yellow')
+        # Update the shared variables
+        shared_variables.variables.update(variables)
+        # Return the variables
         return variables
     else:
-        click.echo('The program was terminated by the user. Please restart the program if you want to run it again.')
+        click.secho('The program was terminated by the user. Please restart the program if you want to run it again.', fg='red')
         exit()
 
 def display_welcome_message():
@@ -47,68 +64,78 @@ def display_welcome_message():
 
     # Display the welcome message
     click.echo('\n')
-    click.echo('Welcome to the project ' + click.style(create_hyperlink("'On-line Order Batching in an Order Picking Warehouse'", hyperlink_github), fg='cyan') + ' by Philipp Schmidt!')
+    click.echo('Welcome to the project ' + click.style(create_hyperlink("'On-line Order Batching in an Order Picking Warehouse'", hyperlink_github), fg='blue') + ' by Philipp Schmidt!')
     click.echo('\n')
     click.echo('This program is designed to improve the makespan of on-line order batching in a single picker warehouse.')
-    click.echo('It is based on the ' + click.style(create_hyperlink('Paper by Sebastian Henn', hyperlink_paper_henn), fg='cyan') + '.')
+    click.echo('It is based on the ' + click.style(create_hyperlink('Paper by Sebastian Henn', hyperlink_paper_henn), fg='blue') + '.')
     click.echo('\n')
-
     # Display information for debug mode
     if debug_mode_global:
-        click.echo('You are running the program in '+ click.style('debug', fg='green')+ ' mode. This means that you will see additional information and messages.')
-        click.echo('\n')
+        click.secho('You are running the program in debug mode. This means that you will see additional information and messages.\n', fg='yellow')
 
 def get_inputs():
     '''
     This function gets the inputs from the user and stores them in the global variables. 
     '''
     # Give the user instructions
-    click.echo("Please provide the following inputs, as they are required to run the program. If you want to use the default values, just press Enter.")
-    click.echo('\n')
+    click.echo("Please provide the following inputs, as they are required to run the program. If you want to use the default values, just press Enter. \n")
     
     # Define the questions
     questions = [
         {
             'type': 'input',
-            'name': 'layout_path',
-            'message': 'Path to the warehouse layout:',
+            'name': 'warehouse_layout_path',
+            'message': 'Path to the warehouse layout [.csv]:',
             'default': 'tests/data/warehouse_positions_20x10x5.CSV'
         },
         {
             'type': 'input',
             'name': 'order_path',
-            'message': 'Path to the orders:',
-            'default': 'tests/data/test_orders.py'
+            'message': 'Path to the orders [.json]:',
+            'default': 'tests/data/test_orders.json'
         },
         {
             'type': 'input',
             'name': 'max_batch_size',
-            'message': 'Maximum batch size:',
+            'message': 'Maximum batch size [>1]:',
             'default': '15'
         },
         {
             'type': 'input',
             'name': 'initial_order_release',
-            'message': 'Initial order release:',
+            'message': 'Initial order release: [>1]',
             'default': '10'
         },
         {
             'type': 'input',
+            'name': 'tour_length_units_per_second',
+            'message': 'Tour length units per Second: [>0]',
+            'default': '20'
+
+        },
+        {
+            'type': 'input',
             'name': 'rearrangement_parameter',
-            'message': 'Rearrangement parameter:',
+            'message': 'Rearrangement parameter [0;1]:',
             'default': '0.5'
         },
         {
             'type': 'input',
             'name': 'threshold_parameter',
-            'message': 'Threshold parameter:',
+            'message': 'Threshold parameter [0;1]:',
+            'default': '0.5'
+        },
+        {
+            'type': 'input',
+            'name': 'release_parameter',
+            'message': 'Release parameter [0;1]:',
             'default': '0.5'
         },
         {
             'type': 'input',
             'name': 'time_limit',
-            'message': 'Time limit:',
-            'default': '5'
+            'message': 'Time limit: [>0]',
+            'default': '0.5'
         },
         {
             'type': 'list',
@@ -141,14 +168,15 @@ def get_inputs():
     click.echo('\n')
     # Store the answers in the variables
     variables = {
-        'layout_path': answers['layout_path'],
+        'warehouse_layout_path': answers['warehouse_layout_path'],
         'max_batch_size': int(answers['max_batch_size']),
         'initial_order_release': int(answers['initial_order_release']),
+        'tour_length_units_per_second': int(answers['tour_length_units_per_second']),
         'rearrangement_parameter': float(answers['rearrangement_parameter']),
         'threshold_parameter': float(answers['threshold_parameter']),
-        'time_limit': int(answers['time_limit']),
+        'release_parameter': float(answers['release_parameter']),
+        'time_limit': float(answers['time_limit']),
         'selection_rule': answers['selection_rule'],
-        'debug_mode': debug_mode_global
     }
 
     # Write the JSON orders to a file
@@ -162,11 +190,11 @@ def program_manual():
     '''
     # Display the manual
     instructions = [
-        ("Release", f"Release orders by pressing {click.style(release_button, fg='red')}."),
-        ("End", f"Release the last order by pressing {click.style(end_button, fg='red')}, which will terminate the program.")
+        ("Release", f"Release orders during runtime by pressing {click.style(release_button, fg='red')}."),
+        ("End", f"Release the last order by pressing {click.style(end_button, fg='red')}.")
     ]
     # Display the instructions
-    click.echo('While running the program, you can provide the following inputs:\n')
+    click.echo('While running the program, you can provide the following keyboard inputs:\n')
     for name, description in instructions:
         click.echo(f"{name:<8}: {description}")
     click.echo('\n')
@@ -182,7 +210,6 @@ def create_hyperlink(text, url):
     # Return the hyperlink
     return f"\033]8;;{url}\033\\{text}\033]8;;\033\\"
 
-
 def duplicate_orders_to_py(order_path):
     '''
     This function duplicates the orders to a .py file.
@@ -191,8 +218,16 @@ def duplicate_orders_to_py(order_path):
     '''
     # Read the orders from the file
     with open(order_path, 'r') as file:
-        orders = file.read()
+        orders = json.load(file)
+    # Clear the .py file content
+    open('src/ui/imported_orders.py', 'w').close()
+    # Write the orders to the .py file
+    with open('src/ui/imported_orders.py', 'a') as file:
+        file.write('imported_orders = ' + str(orders) + '\n')
+    # Print a message for debug mode
+    if debug_mode_global:
+        click.secho(f'The orders were duplicated to the file imported_orders.py. The orders are: {orders} \n', fg='yellow')
 
-    # Write the orders to a .py file
-    with open('imported_orders.py', 'w') as file:
-        file.write(orders)
+if __name__ == '__main__':
+    initialize()
+

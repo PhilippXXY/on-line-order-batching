@@ -1,10 +1,14 @@
-import math
+import copy
 import time
+
+import click
 from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
 from src.core.logic.batch_tour_length_minimizer import create_start_batches, generate_unique_id, iterated_local_search
+from src.vars import shared_variables
+from tabulate import tabulate
 
 
-def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule):
+def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule):
     '''
     This function is called when the order picking decision point A or B is reached.
 
@@ -15,68 +19,84 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, re
     :param threshold_parameter: parameter for the threshold of the batches [0;1]
     :param time_limit: time limit for the iterated local search algorithm
     :param release_parameter: parameter for the release time of the batch [0;1]
+    :param selection_rule: selection rule to be applied
     :return: list of batches, release time
     '''
     # Initialize variables
     batches = []
     release_time = 0
+    try:
+        # Generate a set of batches by means of batching heuristic
+        batches = copy.deepcopy(create_start_batches(orders, max_batch_size))
+        # Apply the iterated local search algorithm to the batches when more than one batch is available
+        if len(batches) > 1:
+            batches = iterated_local_search(copy.deepcopy(batches), max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit)
+        # When only one batch is available, the batch won't be released immediately, in order to prevent the case that a new order arrives, which could be added to the batch.
+        if len(batches) == 1:
+            st_batch, _ = calculate_tour_length_s_shape_routing(batches[0], warehouse_layout)
+           
+            # Initialize a new batch
+            new_batches = []
 
-    # Generate a set of batches by means of batching heuristic
-    batches = create_start_batches(orders, max_batch_size)
-    batches = iterated_local_search(batches, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit)
+            # Add every order of the batch to new distinct batches
+            for order in batches[0]['orders']:
+                # Add the order to a new batch
+                new_batches.append({
+                    'batch_id': generate_unique_id(),
+                    'orders': [order]
+                })
 
-    # When only one batch is available, the batch won't be released immediately, in order to prevent the case that a new order arrives, which could be added to the batch.
-    if len(batches) == 1:
-        st_batch = calculate_tour_length_s_shape_routing(batches[0]['orders'], warehouse_layout)
-        # Initialize a new batch
-        new_batches = []
-
-        # Add every order of the batch to new distinct batches
-        for order in batches[0]['orders']:
-            # Add the order to a new batch
-            new_batches.append({
-                'batch_id': generate_unique_id(),
-                'orders': order
-            })
-
-        # For every order in the new batches
-        for batch in new_batches:
-            # Initialize the tour length of the current order.
             longest_sst = 0
-            # Check if the tour length of the current order is bigger than the smallest tour length found so far
-            if calculate_tour_length_s_shape_routing(batch['orders'], warehouse_layout) > longest_sst:
-                # Update the biggest tour length found so far
-                longest_sst = calculate_tour_length_s_shape_routing(batch['orders'], warehouse_layout)
-                # Update the batch with the longest single service time
-                longest_sst_batch = batch
+            longest_sst_batch = None
+            # For every order in the new batches
+            for i in range(len(new_batches)):
+                # Initialize the tour length of the current order.
+                batch_sst, _ = calculate_tour_length_s_shape_routing(new_batches[i], warehouse_layout)
+                # Check if the tour length of the current order is bigger than the smallest tour length found so far
+                if batch_sst > longest_sst:
+                    # Update the biggest tour length found so far
+                    longest_sst = batch_sst
+                    # Update the batch with the longest single service time
+                    longest_sst_batch = new_batches[i]
 
-        # Get the arrival time of the order with the longest single service time
-        arrival_time_longest_sst_order = longest_sst_batch['arrival_time']
+            # Ensure longest_sst_batch is not None
+            if longest_sst_batch is not None:
+                # Get the arrival time of the order with the longest single service time
+                arrival_time_longest_sst_order = longest_sst_batch['orders'][0]['arrival_time']
+                # Transform the tour lengths according to the predefined units per second
+                st_batch = st_batch / shared_variables.variables['tour_length_units_per_second']
+                longest_sst = longest_sst / shared_variables.variables['tour_length_units_per_second']
+                arrival_time_longest_sst_order = arrival_time_longest_sst_order / shared_variables.variables['tour_length_units_per_second']
+                # Calculate the scheduled release formula as described in the paper by Henn et al. (2012)
+                scheduled_release_formula = ((1 + release_parameter) * arrival_time_longest_sst_order) + (release_parameter * longest_sst) - st_batch
+                # Set the release time to the maximum of the current time and the scheduled release formula
+                release_time = max(time.time(), scheduled_release_formula)
 
-        # Calculate the scheduled release formula as described in the paper by Henn et al. (2012)
-        scheduled_release_formula = ((1 + release_parameter)* arrival_time_longest_sst_order) + (release_parameter*longest_sst) - st_batch
-        release_time = max(time.time(), scheduled_release_formula)
+                # Add the release time to the batch
+                batches[0]['release_time'] = release_time
+            else:
+                print("Error: longest_sst_batch is None")
+                return batches
+            return batches
 
-        # Add the release time to the batch
-        for batch in batches:
-            batch['release_time'] = release_time
 
+        else:
+            # Apply the selection rules
+            ordered_for_picking_batches = copy.deepcopy(sort_batches_by_selection_rules(copy.deepcopy(batches), warehouse_layout, selection_rule))
+            # Set the release time to the current time
+            release_time = time.time()
+
+            # Add the release time to the batches
+            for batch in ordered_for_picking_batches:
+                batch['release_time'] = release_time
+            return ordered_for_picking_batches
+    
+    # Catch any exception that might occur
+    except Exception as e:
+        click.secho(f'Error in order_picking_decision_point_ab: {e}', fg='red')
         return batches
 
-    else:
-        # Apply the selection rules
-        ordered_for_picking_batches = sort_batches_by_selection_rules(batches, selection_rule)
-        # Set the release time to the current time
-        release_time = time.time()
-
-        # Add the release time to the batches
-        for batch in ordered_for_picking_batches:
-            batch['release_time'] = release_time
-
-        return ordered_for_picking_batches
-        
-
-def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit):
+def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, selection_rule, time_limit):
     '''
     This function is called when the order picking decision point C is reached.
     It returns the batches after applying the iterated local search algorithm.
@@ -89,16 +109,20 @@ def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, rea
     :param time_limit: time limit for the iterated local search algorithm
     :return: list of batches
     '''
-
+    print('Order picking decision point C reached')
     batches = create_start_batches(orders, max_batch_size)
+    # Copy the batches to prevent the original batches from being changed
+    copied_batches = copy.deepcopy(batches)
     # Apply the iterated local search algorithm to the batches
-    batches = iterated_local_search(batches, max_batch_size, warehouse_layout, rearrangement_parameter, threshold_parameter, time_limit)
+    batches = iterated_local_search(copied_batches, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit)
+    # Apply the selection rules
+    ordered_for_picking_batches = sort_batches_by_selection_rules(batches, warehouse_layout, selection_rule)
     # Add the release time to the batches
-    for batch in batches:
+    for batch in ordered_for_picking_batches:
         # Set the release time to the current time
         batch['release_time'] = time.time()
 
-    return batches
+    return ordered_for_picking_batches
 
 
 def sort_batches_by_selection_rules(batches, warehouse_layout, selection_rule):
@@ -110,7 +134,6 @@ def sort_batches_by_selection_rules(batches, warehouse_layout, selection_rule):
     :param selection_rule: selection rule to be applied
     :return: list of sorted batches
     '''
-
     if selection_rule == 'SHORT' or selection_rule == 'short':
         batches = selection_rule_short(batches, warehouse_layout)
     elif selection_rule == 'LONG' or selection_rule == 'long':

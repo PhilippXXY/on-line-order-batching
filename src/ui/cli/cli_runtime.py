@@ -1,40 +1,50 @@
+import datetime
 import time
+import uuid
 import click
 import keyboard
 from tabulate import tabulate
-from ui.cli_controller import get_picker_state, get_batches_to_select, release_order
-
-# Define the buttons for the program
-release_button = 'Space'
-end_button = 'Delete'
-# Flag to indicate that the user wants to end the program
-end_program = False
-# Initialize the variables
-picker_state = True # True: Picker is available, False: Picker is picking
-batch_to_select = []
-
-# Define debounce time in seconds
-debounce_time = 0.5
-last_release_time = 0
-last_end_time = 0
+from src.ui import imported_orders
+from src.vars import shared_variables
+import src.ui.cli_controller as cli_controller
 
 def runtime():
-    # While loop to keep the program running until the user presses the end button
-    while not end_program:
-        # Check if the picker state has changed and the picker is now not available anymore
-        if (picker_state != get_picker_state_local()) and not get_picker_state_local():
-            # Get the new batch that will be picked next
-            batch_to_select = get_batches_to_select_local()[0]
-            click.echo("--- New Batch to select ---")
-            click.echo(f"Batch ID: {batch_to_select['batch_id']} ― Tour length: {batch_to_select['tour_length']}")
-            # Prepare the table
-            table_data = [[item['item_id'], item['abs_x_position'], item['abs_y_position'], item['abs_z_position']] for item in batch_to_select['items']]
-            headers = ["Item ID", "Aisle No.", "Y Position", "Z Position"]
-            # Print table using tabulate
-            click.echo(tabulate(table_data, headers=headers, tablefmt="simple_grid"))
+    '''
+    This function is working as the runtime for the CLI. It is responsible for the interaction with the user and the picker.
+    '''
+    # Update the shared variables to indicate that the input process is running
+    shared_variables.variables.update({'input_process_running': True})
 
+    # Define the buttons for the program
+    release_button = 'Space'
+    end_button = 'Delete'
+    # Flag to indicate that the user wants to end the program
+    end_input_process = False
+    # Initialize the variables
+    picker_state = True # True: Picker is available, False: Picker is picking
+    batch_to_select = []
+
+    # Define debounce time in seconds
+    debounce_time = 0.5
+    # Initialize the last release time
+    last_release_time = 0
+    # Initialize the last end time
+    last_end_time = 0
+    
+    # Print a message to indicate that the program is running and explain the basic functionality
+    click.echo('The program is running. The picker is currently available and can pick the first batch.\n\n')
+
+    while not end_input_process:
+        # Check if the logic function has populated the shared variables with the necessary data
+        current_picking_batch = shared_variables.variables.get('current_picking_batch')
+        if current_picking_batch is not None:
+            # Check if the picker state has changed and the picker is now not available anymore
+            if (picker_state != get_picker_state()) and not get_picker_state():
+                batch_to_select = get_batches_to_select()
+                print_batch_to_select(batch_to_select)
+                
         # Update the picker state
-        picker_state = get_picker_state_local()
+        picker_state = get_picker_state()
 
         # Check if the user has pressed the release button and debounce
         if keyboard.is_pressed(release_button):
@@ -42,58 +52,191 @@ def runtime():
             if current_time - last_release_time >= debounce_time:
                 last_release_time = current_time
                 # Release the order
-                release_order_local()
+                release_order()
         
         # Check if the user has pressed the end button and debounce
         if keyboard.is_pressed(end_button):
             current_time = time.time()
             if current_time - last_end_time >= debounce_time:
                 last_end_time = current_time
-                # Set the flag to end the program
-                end_program = True
+                # Set the flag to end the logic of the program
+                shared_variables.variables.update({'input_process_running': False})
+                # Print a message to indicate that the program will be terminated
+                click.secho('The user decided to hand over a last order to the system to pick.', fg='blue')
+                click.secho('The program will now pick the remaining batches and orders.\n\n', fg='blue')
+                # Release the last order
+                release_order()
+                # Set the flag to end the cli program
+                end_input_process = True
 
-    # Print a message to indicate that the program will be terminated
-    click.echo('The program was terminated by the user. It will shut down after the picker has finished all existing orders.')
+        # Avoid too high CPU usage
+        time.sleep(0.05)
 
 
-    while len(get_batches_to_select_local) > 0:
+    while len(get_batches_to_select()) > 0:
         # Check if the picker state has changed and the picker is now not available anymore
-        if (picker_state != get_picker_state_local()) and not get_picker_state_local():
+        if (picker_state != get_picker_state()) and not get_picker_state():
             # Get the new batch that will be picked next
-            batch_to_select = get_batches_to_select_local()[0]
-            click.echo("--- New Batch to select ---")
-            click.echo(f"Batch ID: {batch_to_select['batch_id']} ― Tour length: {batch_to_select['tour_length']}")
-            # Prepare the table
-            table_data = [[item['item_id'], item['abs_x_position'], item['abs_y_position'], item['abs_z_position']] for item in batch_to_select['items']]
-            headers = ["Item ID", "Aisle No.", "Y Position", "Z Position"]
-            # Print table using tabulate
-            click.echo(tabulate(table_data, headers=headers, tablefmt="simple_grid"))
+            batch_to_select = get_batches_to_select()
+            print_batch_to_select(batch_to_select)
 
         # Update the picker state
-        picker_state = get_picker_state_local()
+        picker_state = get_picker_state()
 
-    # Print a message to indicate that the program will be terminated
-    click.echo('The program has been shut down. If you want to restart it, please run the program again.')
+        # Avoid too high CPU usage
+        time.sleep(0.1)
+
+    # Print a message to indicate that the program has been shut down
+    click.secho('All the orders have been picked. The program will now be shut down.', fg='green')
 
 
-
-def get_picker_state_local():
+def get_picker_state():
     '''
-    This function returns the current state of the picker.
+    Get the picker state from the shared variables
+
+    :return: Picker state
     '''
-    return get_picker_state()
+    return shared_variables.picker_state
+
+def get_batches_to_select():
+    '''
+    Get the batches to select from the shared variables
+
+    :return: Batches to select
+    '''
+    return shared_variables.variables.get('current_picking_batch', [])
+
+def release_order():
+    '''
+    Release an order to the shared variables from the imported orders and remove it from the imported orders
+
+    :return: Released order
+    '''
+    try:
+        # If there are still orders in the imported orders
+        if imported_orders.imported_orders:
+            # Pop the first order from the imported orders and store it in a variable
+            order = imported_orders.imported_orders.pop(0)
+            # Generate a unique order ID
+            order['order_id'] = generate_unique_id()
+            # Set the arrival time of the order to the current time
+            order['arrival_time'] = time.time()
+            # Update the shared variables with the released order
+            shared_variables.orders.append(order)
+            # Print the released order
+            click.echo(f"Order with the ID {order['order_id']} arrived at {datetime.datetime.fromtimestamp(order['arrival_time']).strftime('%H:%M:%S')} and is handed over to the batching process.")
+            click.echo('The order contains the following items:')
+            table_data = [[item['item_id']] for item in order['items']]
+            headers = ['Item ID']
+            click.echo(tabulate(table_data, headers=headers, tablefmt='simple_grid'))
+            click.echo('\n')
+            return order
+        
+        # If there are no more orders in the imported orders
+        else:
+            # Print a message that there are no more orders to release
+            click.secho('No more orders to release', fg='red')
+            # Return None
+            return None
+    # Catch exceptions
+    except Exception as e:
+        click.secho(f'release_order encountered an error: {e}', fg='red')
+        return None
+
+
+def generate_unique_id():
+    '''
+    Generate a unique ID using the UUID library
+
+    :return: Unique ID
+    '''
+    return uuid.uuid4().hex
+
+
+def print_batch_to_select(batch):
+    '''
+    Print the batch to the console
+
+    :param batch: Batch to be printed
+    '''
+    # Convert the batch structure to a table
+    table = []
+    # Get the batch ID
+    batch_id = batch['batch_id']
+    # Get the items sorted by S-Shape-Routing
+    batch_sorted_items = batch['sorted_batch_s_shape_routing']
+    # Get the amount of orders
+    batch_amount_of_orders = batch['amount_of_orders']
+    # Get the amount of items
+    batch_amount_of_items = batch['amount_of_items']
+    # Get the tour length
+    batch_tour_length = batch['tour_length']
+    # Get the start time and convert it to a readable format
+    batch_start_time = datetime.datetime.fromtimestamp(batch['start_time']).strftime('%H:%M:%S.%f')[:-5]
+    # Get the arrival time and convert it to a readable format
+    batch_arrival_time = datetime.datetime.fromtimestamp(batch['arrival_time']).strftime('%H:%M:%S.%f')[:-5]
+    # Initialize the orders
+    orders = []
+    # Iterate over the orders
+    for order in batch['orders']:
+        # Get the order ID
+        order_id = order['order_id']
+        # Initialize the items
+        items = []
+        # Iterate over the items
+        if 'items' in order:
+            for item in order['items']:
+                # Get the item ID, X, Y, and Z position
+                item_id = item['item_id']
+                abs_x_position = item['abs_x_position']
+                abs_y_position = item['abs_y_position']
+                abs_z_position = item['abs_z_position']
+                # Append the item to the items list
+                items.append(f"Item ID: {item_id}, X: {abs_x_position}, Y: {abs_y_position}, Z: {abs_z_position}")
+        # Append the order to the orders list
+        orders.append(f"Order ID: {order_id}\n" + "\n".join(items))
+    # Append the batch ID and the orders to the table
+    table.append([f"Batch ID: {batch_id}", "\n\n".join(orders)])
+    # Add the items sorted by S-Shape-Routing to the table so that the picker can see the items in the order they should be picked
+    sorted_items_table = "\n".join([f"Item ID: {item['item_id']}, X: {item['abs_x_position']}, Y: {item['abs_y_position']}, Z: {item['abs_z_position']}" for item in batch_sorted_items])
+    table.append(['Items sorted by S-Shape-Routing:', sorted_items_table])
+    # Add the amount of orders to the table
+    table.append(['Amount of Orders:', batch_amount_of_orders])
+    # Add the amount of items to the table
+    table.append(['Amount of Items:', batch_amount_of_items])
+    # Add the tour length to the table
+    table.append(['Tour Length in warehouse units:', batch_tour_length])
+    # Add the start time to the table
+    table.append(['Start Time:', batch_start_time])
+    # Add the arrival time to the table
+    table.append(['Arrival Time:', batch_arrival_time])
+    # Print the table
+    click.echo('--- Released batch to be picked now ---')
+    click.echo(tabulate(table, tablefmt='simple_grid'))
+    click.echo(remaining_batches_print_return(shared_variables.variables.get('amount_of_existing_batches')))
+    click.echo(remaining_orders_print_return(shared_variables.variables.get('amount_of_existing_orders')))
+    click.echo('\n')
     
+def remaining_batches_print_return(amount_of_existing_batches):
+    '''
+    Gives the amount of remaining batches to select
 
-def get_batches_to_select_local():
+    :param amount_of_existing_batches: Amount of existing batches
+    :return: Remaining batches as string
     '''
-    This function returns the batches that are available to select.
-    '''
-    return get_batches_to_select()
+    if amount_of_existing_batches == 0:
+        return 'No more batches to select.'
+    else:
+        return f'Amount of remaining batches to get picked: {amount_of_existing_batches}'
     
+def remaining_orders_print_return(amount_of_existing_orders):
+    '''
+    Gives the amount of remaining orders to select
 
-def release_order_local():
+    :param amount_of_existing_orders: Amount of existing orders
+    :return: Remaining orders as string
     '''
-    This function releases the orders.
-    '''
-    release_order()
-    click.echo('--- Order released ---')
+    if amount_of_existing_orders == 0:
+        return 'There are no more open orders.'
+    else:
+        return f'Amount of open orders: {amount_of_existing_orders}'
