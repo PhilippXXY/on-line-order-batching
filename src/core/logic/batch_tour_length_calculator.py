@@ -1,5 +1,7 @@
 import math
 
+import click
+
 
 # Initialize the direction of the tour. It can be either True (upwards) or False (downwards).
 direction = True
@@ -51,7 +53,7 @@ def calculate_tour_length_s_shape_routing(batch, warehouse_layout):
         total_tour_length += distance
 
     except Exception as e:
-        print(f'calculate_tour_length_s_shape_routing encountered an error: {e}')
+        click.secho(f'calculate_tour_length_s_shape_routing encountered an error: {e}', fg='red')
         return None, None
     
     return total_tour_length, sorted_batch

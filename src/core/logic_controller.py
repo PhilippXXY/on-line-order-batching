@@ -49,7 +49,7 @@ class LogicThread(threading.Thread):
             self.logic_function()
         # Catch exceptions
         except Exception as e:
-            click.echo(f'LogicThread encountered an error: {e}')
+            click.secho(f'LogicThread encountered an error: {e}', fg='red')
         # Finally, print a message that the run method has completed
         finally:
             if debug_mode:
@@ -141,12 +141,10 @@ class LogicThread(threading.Thread):
                         continue
                     # If the current picking process has not started, start it with the next batch
                     else:
-                        print(len(current_sorted_batches))
                         for batch in current_sorted_batches:
                             # Check if the batch is ready to be picked
                             if batch['release_time'] < time.time():
                                 current_picking_batch, current_picking_process_start_time, current_picking_process_arrival_time = picker_starts_tour(batch, warehouse_layout)
-                                print('Released')
                                 # Remove the orders of the current batch from the list of all orders
                                 for batch_order in current_picking_batch['orders']:
                                     for all_order in all_orders:
@@ -207,7 +205,7 @@ class LogicThread(threading.Thread):
                             # Break the loop
                             break
         except Exception as e:
-            print(f'Logic function encountered an error: {e}')
+            click.secho(f'Logic function encountered an error: {e}', fg='red')
 
 
 def debug_print_batches(current_sorted_batches):

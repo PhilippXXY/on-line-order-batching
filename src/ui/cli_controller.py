@@ -58,7 +58,7 @@ class CLIThread(threading.Thread):
             runtime()
         # Catch exceptions
         except Exception as e:
-            click.echo(f'CLIThread encountered an error: {e}')
+            click.secho(f'CLIThread encountered an error: {e}', fg='red')
         # Finally, print a message that the run method has completed
         finally:
             # Set the input process to not running
@@ -96,7 +96,7 @@ class CLIThread(threading.Thread):
                 return None
         # Catch exceptions
         except Exception as e:
-            print(f'release_order encountered an error: {e}')
+            click.secho(f'release_order encountered an error: {e}', fg='red')
             return None
 
 

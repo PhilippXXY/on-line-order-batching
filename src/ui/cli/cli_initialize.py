@@ -43,13 +43,13 @@ def initialize(ctx, debug_mode):
     if start_program:
         # Print a message for debug mode
         if debug_mode_global:
-            click.echo('The user has decided to start the program. The program will now be started.\n')
+            click.secho('The user has decided to start the program. The program will now be started.\n', fg='yellow')
         # Update the shared variables
         shared_variables.variables.update(variables)
         # Return the variables
         return variables
     else:
-        click.echo('The program was terminated by the user. Please restart the program if you want to run it again.')
+        click.secho('The program was terminated by the user. Please restart the program if you want to run it again.', fg='red')
         exit()
 
 def display_welcome_message():
@@ -64,10 +64,10 @@ def display_welcome_message():
 
     # Display the welcome message
     click.echo('\n')
-    click.echo('Welcome to the project ' + click.style(create_hyperlink("'On-line Order Batching in an Order Picking Warehouse'", hyperlink_github), fg='cyan') + ' by Philipp Schmidt!')
+    click.echo('Welcome to the project ' + click.style(create_hyperlink("'On-line Order Batching in an Order Picking Warehouse'", hyperlink_github), fg='blue') + ' by Philipp Schmidt!')
     click.echo('\n')
     click.echo('This program is designed to improve the makespan of on-line order batching in a single picker warehouse.')
-    click.echo('It is based on the ' + click.style(create_hyperlink('Paper by Sebastian Henn', hyperlink_paper_henn), fg='cyan') + '.')
+    click.echo('It is based on the ' + click.style(create_hyperlink('Paper by Sebastian Henn', hyperlink_paper_henn), fg='blue') + '.')
     click.echo('\n')
     # Display information for debug mode
     if debug_mode_global:
@@ -85,31 +85,31 @@ def get_inputs():
         {
             'type': 'input',
             'name': 'warehouse_layout_path',
-            'message': 'Path to the warehouse layout:',
+            'message': 'Path to the warehouse layout [.csv]:',
             'default': 'tests/data/warehouse_positions_20x10x5.CSV'
         },
         {
             'type': 'input',
             'name': 'order_path',
-            'message': 'Path to the orders:',
+            'message': 'Path to the orders [.json]:',
             'default': 'tests/data/test_orders.json'
         },
         {
             'type': 'input',
             'name': 'max_batch_size',
-            'message': 'Maximum batch size:',
+            'message': 'Maximum batch size [>1]:',
             'default': '15'
         },
         {
             'type': 'input',
             'name': 'initial_order_release',
-            'message': 'Initial order release:',
+            'message': 'Initial order release: [>1]',
             'default': '10'
         },
         {
             'type': 'input',
             'name': 'tour_length_units_per_second',
-            'message': 'Tour length units per Second:',
+            'message': 'Tour length units per Second: [>0]',
             'default': '20'
 
         },
@@ -134,7 +134,7 @@ def get_inputs():
         {
             'type': 'input',
             'name': 'time_limit',
-            'message': 'Time limit:',
+            'message': 'Time limit: [>0]',
             'default': '0.5'
         },
         {
@@ -190,11 +190,11 @@ def program_manual():
     '''
     # Display the manual
     instructions = [
-        ("Release", f"Release orders by pressing {click.style(release_button, fg='red')}."),
-        ("End", f"Release the last order by pressing {click.style(end_button, fg='red')}, which will terminate the program.")
+        ("Release", f"Release orders during runtime by pressing {click.style(release_button, fg='red')}."),
+        ("End", f"Release the last order by pressing {click.style(end_button, fg='red')}.")
     ]
     # Display the instructions
-    click.echo('While running the program, you can provide the following inputs:\n')
+    click.echo('While running the program, you can provide the following keyboard inputs:\n')
     for name, description in instructions:
         click.echo(f"{name:<8}: {description}")
     click.echo('\n')

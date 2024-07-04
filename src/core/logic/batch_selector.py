@@ -93,7 +93,7 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, wa
     
     # Catch any exception that might occur
     except Exception as e:
-        click.echo(f'Error in order_picking_decision_point_ab: {e}')
+        click.secho(f'Error in order_picking_decision_point_ab: {e}', fg='red')
         return batches
 
 def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, selection_rule, time_limit):
