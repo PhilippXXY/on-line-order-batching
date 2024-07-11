@@ -1,9 +1,13 @@
 import copy
 import random
 import time
+import traceback
 import uuid
+
+import click
 from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
 from src.core.logic.join_item_information import join_item_id_and_position_csv
+from src.vars import shared_variables
 
 
 def create_start_batches(orders, max_batch_size):
@@ -45,9 +49,10 @@ def create_start_batches(orders, max_batch_size):
                 'orders': current_batch
             })
     except Exception as e:
-        print(e)
-        import traceback
-        traceback.print_exc()
+        click.secho(f'create_start_batches encountered an error: {e}', fg='red')
+        if shared_variables.variables.get('debug_mode'):
+            click.secho(traceback.print_exc(), fg='red')
+        return None
     return batches
 
 

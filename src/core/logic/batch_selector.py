@@ -76,7 +76,7 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, wa
                 # Add the release time to the batch
                 batches[0]['release_time'] = release_time
             else:
-                print("Error: longest_sst_batch is None")
+                click.secho("Error: longest_sst_batch is None", fg='red')
                 return batches
             return batches
 
