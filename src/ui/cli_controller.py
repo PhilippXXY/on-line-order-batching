@@ -89,7 +89,7 @@ class CLIThread(threading.Thread):
                 shared_variables.orders.append(order)
                 # If debug mode is enabled, print a message
                 if shared_variables.variables.get('debug_mode'):
-                    click.secho(f'Order released: {order}\n', fg = 'yellow')
+                    click.secho(f'Order released: {order}\n', fg='yellow')
                 return order
             # If there are no more orders in the imported orders
             else:

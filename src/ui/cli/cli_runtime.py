@@ -26,7 +26,7 @@ def runtime():
     batch_to_select = []
 
     # Define debounce time in seconds
-    debounce_time = 0.5
+    debounce_time = 0.3
     # Initialize the last release time
     last_release_time = 0
     # Initialize the last end time
@@ -34,7 +34,8 @@ def runtime():
     
     # Print a message to indicate that the program is running and explain the basic functionality
     click.echo('The program is running. The picker is currently available and can pick the first batch.\n\n')
-
+    
+    # Run the picking process
     while not end_input_process:
         # Check if the logic function has populated the shared variables with the necessary data
         current_picking_batch = shared_variables.variables.get('current_picking_batch')
@@ -81,10 +82,15 @@ def runtime():
 
     # Get the amount of existing batches
     amount_of_existing_batches = shared_variables.variables.get('amount_of_existing_batches')
-
+    #print(f'Amount of existing batches: {amount_of_existing_batches}')
+    print(f'Batches: {shared_variables.variables.get("current_picking_batch")}')
+    # Get the picker state
+    picker_state = False
+    
     # Run the picking process
     while amount_of_existing_batches > 0:
 
+        # Check if the picker state has changed and the picker is now not available anymore
         if (picker_state != get_picker_state()) and get_picker_state():
             batch_to_select = get_batches_to_select()
             print_batch_to_select(batch_to_select)

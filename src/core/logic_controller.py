@@ -103,7 +103,7 @@ class LogicThread(threading.Thread):
             current_picking_batch = {}
             current_picking_process_start_time = 0
             current_picking_process_arrival_time = 0
-            batch_information_temp = {'orders':[]}
+            batch_information_temp = {'orders': []}
             shared_variables.variables['last_batching_process_finished'] = False
             
             # Get the initial order release
@@ -119,7 +119,6 @@ class LogicThread(threading.Thread):
                 debug_print_batches(current_sorted_batches)
                 click.secho('Initial orders:', fg='yellow')
                 debug_print_orders(all_orders)
-            
 
             # Loops while the input process is running
             while input_process_running:
@@ -135,6 +134,8 @@ class LogicThread(threading.Thread):
                     # Get the new order
                     order = get_new_order()
                     if shared_variables.variables.get('debug_mode'):
+                        click.secho(f'New order arrived:', fg='yellow')
+                        debug_print_orders([order])
                         click.secho(f'Current orders:', fg='yellow')
                         debug_print_orders(all_orders)
                     # Pass the new order and receive batches with release times
@@ -178,7 +179,7 @@ class LogicThread(threading.Thread):
                     
                                     # Remove the batch from the list of sorted batches
                                     current_sorted_batches.remove(batch)
-                    
+
                                     # Print for debugging purposes
                                     if shared_variables.variables.get('debug_mode'):
                                         click.secho(f'Released batch with release time: {datetime.datetime.fromtimestamp(batch['release_time']).strftime('%H:%M:%S.%f')[:-5]} and arrival time: {datetime.datetime.fromtimestamp(current_picking_process_arrival_time).strftime('%H:%M:%S.%f')[:-5]}', fg='yellow')
@@ -239,7 +240,7 @@ class LogicThread(threading.Thread):
                             current_sorted_batches.remove(batch)
                             # Print for debugging purposes
                             if shared_variables.variables.get('debug_mode'):
-                                click.secho(f'Released batch with release time: {datetime.datetime.fromtimestamp(batch['release_time']).strftime('%H:%M:%S.%f')[:-5]} and arrival time: {datetime.datetime.fromtimestamp(current_picking_process_arrival_time).strftime('%H:%M:%S.%f')[:-5]}', fg='yellow')
+                                click.secho(f'Released batch with release time: {datetime.datetime.fromtimestamp(current_picking_process_start_time).strftime('%H:%M:%S.%f')[:-5]} and arrival time: {datetime.datetime.fromtimestamp(current_picking_process_arrival_time).strftime('%H:%M:%S.%f')[:-5]}', fg='yellow')
                                 debug_print_batches([batch])
                             break
 
