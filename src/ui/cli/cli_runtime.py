@@ -32,14 +32,18 @@ def runtime():
     # Initialize the last end time
     last_end_time = 0
     
+    # Flag to get the first batch
+    first_batch = True
+
     # Print a message to indicate that the program is running and explain the basic functionality
     click.echo('The program is running. The picker is currently available and can pick the first batch.\n\n')
-    
+
     # Run the picking process
     while not end_input_process:
         # Check if the logic function has populated the shared variables with the necessary data
         current_picking_batch = shared_variables.variables.get('current_picking_batch')
         if current_picking_batch is not None:
+            # Check if the first batch is available and print it
             # Check if the picker state has changed and the picker is now not available anymore
             if (picker_state != get_picker_state()) and not get_picker_state():
                 batch_to_select = get_batches_to_select()
@@ -72,7 +76,7 @@ def runtime():
                 end_input_process = True
 
         # Avoid too high CPU usage
-        time.sleep(0.05)
+        time.sleep(0.01)
 
     # Wait until the last batches have been formed
     # Otherwise the program would jump to the end before the last batches have been formed
@@ -80,13 +84,15 @@ def runtime():
         time.sleep(0.01)
         pass
 
+    # Set the first batch flag to True
+    first_batch = True
+    
     # Get the amount of existing batches
     amount_of_existing_batches = shared_variables.variables.get('amount_of_existing_batches')
-    #print(f'Amount of existing batches: {amount_of_existing_batches}')
-    print(f'Batches: {shared_variables.variables.get("current_picking_batch")}')
+
     # Get the picker state
     picker_state = False
-    
+
     # Run the picking process
     while amount_of_existing_batches > 0:
 
@@ -102,7 +108,7 @@ def runtime():
         amount_of_existing_batches = shared_variables.variables.get('amount_of_existing_batches')
 
         # Avoid too high CPU usage
-        time.sleep(0.05)
+        time.sleep(0.01)
 
     
     # Print a message to indicate that the program has been shut down
