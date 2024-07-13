@@ -218,6 +218,7 @@ def calculate_delay_single_batch(batch, warehouse_layout, release_parameter_alph
     '''
     This function calculates the release time of a single batch.
     It calculates the release time according to the scheduled release formula as described in the paper by Henn et al. (2012) 4.1 Algorithm 1.
+    Additionally it adjusts the release time according to the predefined units per second.
 
     :param batch: batch to determine the release time
     :param warehouse_layout: dictionary containing the warehouse layout information
@@ -236,7 +237,7 @@ def calculate_delay_single_batch(batch, warehouse_layout, release_parameter_alph
     # Calculate the tour length of the batch
     tour_length_j_batch, _ = calculate_tour_length_s_shape_routing(batch, warehouse_layout)
     # Calculate the service time of the batch
-    st_j_service_time_batch = tour_length_j_batch / tour_length_units_per_second
+    st_j_service_time_batch = tour_length_j_batch
 
     # Add every order of the batch to new distinct batches
     new_batches = []
@@ -251,7 +252,7 @@ def calculate_delay_single_batch(batch, warehouse_layout, release_parameter_alph
         # Calculate the tour length of the current order
         batch_sst, _ = calculate_tour_length_s_shape_routing(new_batches[i], warehouse_layout)
         # Transform the tour length according to the predefined units per second
-        batch_sst = batch_sst / tour_length_units_per_second
+        batch_sst = batch_sst
         # Check if the tour length of the current order is bigger than the smallest tour length found so far
         if batch_sst > st_i_longest_sst_order:
             # Update the biggest tour length found so far 
@@ -260,7 +261,6 @@ def calculate_delay_single_batch(batch, warehouse_layout, release_parameter_alph
             ri_arrival_time_longest_order_temp = new_batches[i]['orders'][0]['arrival_time']
             # Calculate the difference between the arrival time of the order with the longest single service time and the current time
             ri_arrival_time_longest_order = abs(ri_arrival_time_longest_order_temp - t_current_time)
-            print(f"Arrival time: {ri_arrival_time_longest_order}")
 
     # Check if the given values fulfill the conditions given by the paper
     if (1 + release_parameter_alpha) * ri_arrival_time_longest_order + release_parameter_alpha * st_i_longest_sst_order > 2 * t_current_time + st_j_service_time_batch:
@@ -268,14 +268,23 @@ def calculate_delay_single_batch(batch, warehouse_layout, release_parameter_alph
 
     # Calculate the scheduled release formula as described in the paper by Henn et al. (2012) 4.1 Algorithm 1
     scheduled_release_by_formula = ((1 + release_parameter_alpha) * ri_arrival_time_longest_order) + (release_parameter_alpha * st_i_longest_sst_order) - st_j_service_time_batch
-    print(f'first part {(1 + release_parameter_alpha) * ri_arrival_time_longest_order}')	
-    print(f'second part {release_parameter_alpha * st_i_longest_sst_order}')
-    print(f'third part {st_j_service_time_batch}')
-    # Set the release time to the maximum of the current time and the scheduled release time
-    release_time = max(t_current_time, scheduled_release_by_formula)
-    print(f"Release time: {release_time}")
-    print(f"Difference: {release_time - t_current_time}")
+
+    # Set the temporary delay to the maximum of the current time and the scheduled release time
+    temp_delay = scheduled_release_by_formula
+
+    # Adjust the delay according to the predefined units per second
+    temp_delay = temp_delay / tour_length_units_per_second
+
+    # Calculate the release time
+    release_time = max(t_current_time, temp_delay + t_current_time)
+
     # Add the release time to the batch
     batch['release_time'] = release_time
+
+    if shared_variables.variables.get('debug_mode'):
+        click.secho(f"Current time: {t_current_time}", fg='yellow')
+        click.secho(f"Release time: {release_time}", fg='yellow')
+        click.secho(f"Release time by formula: {scheduled_release_by_formula}", fg='yellow')
+        click.secho(f'Delay: {release_time - t_current_time}', fg='yellow')
 
     return batch

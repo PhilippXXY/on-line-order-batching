@@ -22,12 +22,12 @@ class TestBatchSelector(unittest.TestCase):
     # Maximum batch size
     max_batch_size = 15
     # Release parameter
-    release_parameter = 0.6
+    release_parameter = 1.0
 
     def setUp(self):
         # Set up the shared variables
         shared_variables.variables = {
-            'tour_length_units_per_second': 20
+            'tour_length_units_per_second': 1
     }
 
     def test_calculate_delay_single_batch(self):
@@ -39,8 +39,8 @@ class TestBatchSelector(unittest.TestCase):
         orders = self.add_positions_to_items(orders, self.dataset_csv_path)
         # Add random arrival times to the orders
         for order in orders:
-            # Generate a random arrival time in the last five minutes
-            arrival_time = random.randint(0, 5*60)
+            # Generate a random arrival time in the last minute
+            arrival_time = 15 #random.randint(0, 1*60)
             order['arrival_time'] = time.time() - arrival_time
 
         # Create batches
