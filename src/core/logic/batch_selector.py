@@ -282,9 +282,9 @@ def calculate_delay_single_batch(batch, warehouse_layout, release_parameter_alph
     batch['release_time'] = release_time
 
     if shared_variables.variables.get('debug_mode'):
-        click.secho(f"Current time: {t_current_time}", fg='yellow')
-        click.secho(f"Release time: {release_time}", fg='yellow')
-        click.secho(f"Release time by formula: {scheduled_release_by_formula}", fg='yellow')
+        click.secho(f"Current time: {datetime.datetime.fromtimestamp(t_current_time).strftime('%H:%M:%S.%f')[-5]}", fg='yellow')
+        click.secho(f"Release time: {datetime.datetime.fromtimestamp(release_time).strftime('%H:%M:%S.%f')[-5]}", fg='yellow')
+        click.secho(f"Release delay by formula: {scheduled_release_by_formula}", fg='yellow')
         click.secho(f'Delay: {release_time - t_current_time}', fg='yellow')
 
     return batch
