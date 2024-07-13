@@ -159,7 +159,8 @@ class LogicThread(threading.Thread):
                                     # Store the current batch information
                                     batch_information_temp = copy.deepcopy(current_sorted_batches[0])
                                     # Call the one_batch_available function to get a new release time
-                                    one_batch_available(all_orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule)
+                                    current_sorted_batches = one_batch_available(all_orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule)
+                                    break
                                 # Start the picking process
                                 else:
                                     current_picking_batch, current_picking_process_start_time, current_picking_process_arrival_time = picker_starts_tour(batch, warehouse_layout)
