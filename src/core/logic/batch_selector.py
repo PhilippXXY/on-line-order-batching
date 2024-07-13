@@ -55,8 +55,6 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, wa
     # Catch any exception that might occur
     except Exception as e:
         click.secho(f'Error in order_picking_decision_point_ab: {e}', fg='red')
-        if shared_variables.variables.get('debug_mode'):
-            click.secho(traceback.print_exc(), fg='red')
         return batches
 
 def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, selection_rule, time_limit):
@@ -144,8 +142,6 @@ def selection_rule_short(batches, warehouse_layout):
         sorted_batches = sorted(batches, key=lambda x: x['tour_length'])
     except Exception as e:
         click.secho(f'Error in selection_rule_short: {e}', fg='red')
-        if shared_variables.variables.get('debug_mode'):
-            click.secho(traceback.print_exc(), fg='red')
 
     return sorted_batches
 
@@ -171,8 +167,6 @@ def selection_rule_long(batches, warehouse_layout):
         sorted_batches = sorted(batches, key=lambda x: x['tour_length'], reverse=True)
     except Exception as e:
         click.secho(f'Error in selection_rule_long: {e}', fg='red')
-        if shared_variables.variables.get('debug_mode'):
-            click.secho(traceback.print_exc(), fg='red')
 
     return sorted_batches
 
@@ -208,8 +202,6 @@ def selection_rule_sav(batches, warehouse_layout):
         sorted_batches = sorted(batches, key=lambda x: x['savings'], reverse=True)
     except Exception as e:
         click.secho(f'Error in selection_rule_sav: {e}', fg='red')
-        if shared_variables.variables.get('debug_mode'):
-            click.secho(traceback.print_exc(), fg='red')
 
     return sorted_batches
 
@@ -280,11 +272,5 @@ def calculate_delay_single_batch(batch, warehouse_layout, release_parameter_alph
 
     # Add the release time to the batch
     batch['release_time'] = release_time
-
-    if shared_variables.variables.get('debug_mode'):
-        click.secho(f"Current time: {datetime.datetime.fromtimestamp(t_current_time).strftime('%H:%M:%S.%f')[-5]}", fg='yellow')
-        click.secho(f"Release time: {datetime.datetime.fromtimestamp(release_time).strftime('%H:%M:%S.%f')[-5]}", fg='yellow')
-        click.secho(f"Release delay by formula: {scheduled_release_by_formula}", fg='yellow')
-        click.secho(f'Delay: {release_time - t_current_time}', fg='yellow')
 
     return batch

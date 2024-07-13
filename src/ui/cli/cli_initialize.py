@@ -6,34 +6,18 @@ from src.vars import shared_variables
 # Define the buttons for the program
 release_button = 'Space'
 end_button = 'Delete'
-# Define the global variables
-global debug_mode_global
 
 # Start the CLI program
 @click.command()
-@click.option('--debug-mode', '-d', is_flag=True, help='Run the program in debug mode.')
 @click.pass_context
-def initialize(ctx, debug_mode):
+def initialize(ctx):
     '''
     This function is the initializer function of the program. It initializes the program and gets the inputs from the user.
-
-    :param debug_mode: A boolean value that indicates if the program should run in debug mode.
     '''
-    # Call the global variables
-    global debug_mode_global
-    debug_mode_global = debug_mode
-    shared_variables.variables['debug_mode'] = debug_mode
-
     # Display the welcome message
     display_welcome_message()
     # Get the inputs from the user
     variables = get_inputs()
-    # Print the inputs for debug mode
-    if debug_mode_global:
-        click.secho('The inputs are: ', fg='yellow')
-        for key, value in variables.items():
-            click.secho(f'{key}: {value}', fg='yellow')
-        click.echo('\n')
     # Display the manual of the program
     program_manual()
 
@@ -41,9 +25,6 @@ def initialize(ctx, debug_mode):
     start_program = inquirer.confirm(message='Do you want to start the program with the provided inputs and release the orders?').execute()
     click.echo('\n')
     if start_program:
-        # Print a message for debug mode
-        if debug_mode_global:
-            click.secho('The user has decided to start the program. The program will now be started.\n', fg='yellow')
         # Update the shared variables
         shared_variables.variables.update(variables)
         # Return the variables
@@ -56,8 +37,6 @@ def display_welcome_message():
     '''
     This function displays the welcome message of the program.
     '''
-    # Call the global variables
-    global debug_mode_global
     # Initialize the variables
     hyperlink_paper_henn = 'https://www.sciencedirect.com/science/article/pii/S0305054812000020'
     hyperlink_github = 'https://github.com/PhilippXXY/on-line-order-batching'
@@ -69,9 +48,6 @@ def display_welcome_message():
     click.echo('This program is designed to improve the makespan of on-line order batching in a single picker warehouse.')
     click.echo('It is based on the ' + click.style(create_hyperlink('Paper by Sebastian Henn', hyperlink_paper_henn), fg='blue') + '.')
     click.echo('\n')
-    # Display information for debug mode
-    if debug_mode_global:
-        click.secho('You are running the program in debug mode. This means that you will see additional information and messages.\n', fg='yellow')
 
 def get_inputs():
     '''
@@ -224,9 +200,7 @@ def duplicate_orders_to_py(order_path):
     # Write the orders to the .py file
     with open('src/ui/imported_orders.py', 'a') as file:
         file.write('imported_orders = ' + str(orders) + '\n')
-    # Print a message for debug mode
-    if debug_mode_global:
-        click.secho(f'The orders were duplicated to the file imported_orders.py. The orders are: {orders} \n', fg='yellow')
+
 
 if __name__ == '__main__':
     initialize()

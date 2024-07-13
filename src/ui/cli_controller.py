@@ -26,18 +26,12 @@ class CLIThread(threading.Thread):
         # Set the variables
         self.variables = variables
 
-        # Set the debug mode
-        debug_mode = shared_variables.variables.get('debug_mode')
         # Set the input process to running
         shared_variables.variables['input_process_running'] = True
-        # If debug mode is enabled, print a message
-        if debug_mode:
-            click.secho(f'Amount of orders to release: {shared_variables.variables.get("initial_order_release")}\n', fg='yellow')
+    
         # Release the starting orders based on the initial order release variable
         for i in range(shared_variables.variables.get('initial_order_release')):
             # Release an order
-            if debug_mode:
-                click.secho(f'#{i}', fg='yellow')
             release_order = self.release_order()
             # If there are no more orders to release, break the loop
             if release_order is None:
@@ -47,12 +41,7 @@ class CLIThread(threading.Thread):
         '''
         Run method of the CLI thread
         '''
-        # Set the debug mode
-        debug_mode = shared_variables.variables.get('debug_mode')
         try:
-            # If debug mode is enabled, print a message
-            if debug_mode:
-                click.secho('CLIThread running\n', fg='yellow')
             # Update the shared variables with the variables of the thread
             shared_variables.variables.update(self.variables)
             # Call the runtime method
@@ -60,14 +49,10 @@ class CLIThread(threading.Thread):
         # Catch exceptions
         except Exception as e:
             click.secho(f'CLIThread encountered an error: {e}', fg='red')
-            if shared_variables.variables.get('debug_mode'):
-                click.secho(traceback.print_exc(), fg='red')
         # Finally, print a message that the run method has completed
         finally:
             # Set the input process to not running
             shared_variables.variables['input_process_running'] = False
-            if debug_mode:
-                click.secho('CLIThread run method completed', fg='yellow')
 
 
     def release_order(self):
@@ -87,10 +72,9 @@ class CLIThread(threading.Thread):
                 order['arrival_time'] = time.time()
                 # Update the shared variables with the released order
                 shared_variables.orders.append(order)
-                # If debug mode is enabled, print a message
-                if shared_variables.variables.get('debug_mode'):
-                    click.secho(f'Order released: {order}\n', fg='yellow')
+
                 return order
+            
             # If there are no more orders in the imported orders
             else:
                 # Print a message that there are no more orders to release
@@ -100,8 +84,6 @@ class CLIThread(threading.Thread):
         # Catch exceptions
         except Exception as e:
             click.secho(f'release_order encountered an error: {e}', fg='red')
-            if shared_variables.variables.get('debug_mode'):
-                click.secho(traceback.print_exc(), fg='red')
             return None
 
 

@@ -88,8 +88,6 @@ def last_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout
         batches = order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, selection_rule, time_limit)
     except Exception as e:
         click.secho(f'Error in last_order_arrives: {e}', fg='red')
-        if shared_variables.variables.get('debug_mode'):
-            traceback.print_exc()
 
     return batches
 

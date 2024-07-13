@@ -50,8 +50,6 @@ def create_start_batches(orders, max_batch_size):
             })
     except Exception as e:
         click.secho(f'create_start_batches encountered an error: {e}', fg='red')
-        if shared_variables.variables.get('debug_mode'):
-            click.secho(traceback.print_exc(), fg='red')
         return None
     return batches
 

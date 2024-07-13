@@ -57,8 +57,6 @@ def calculate_tour_length_s_shape_routing(batch, warehouse_layout):
 
     except Exception as e:
         click.secho(f'calculate_tour_length_s_shape_routing encountered an error: {e}', fg='red')
-        if shared_variables.variables.get('debug_mode'):
-            click.secho(traceback.print_exc(), fg='red')
         return None, None
     
     return total_tour_length, sorted_batch

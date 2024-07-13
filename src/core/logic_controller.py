@@ -38,12 +38,7 @@ class LogicThread(threading.Thread):
         '''
         Run method of the logic thread
         '''
-        # Set the debug mode
-        debug_mode = shared_variables.variables.get('debug_mode')
         try:
-            # If debug mode is enabled, print a message
-            if debug_mode:
-                click.secho('LogicThread running\n', fg='yellow')
             # Update the shared variables with the variables of the thread
             shared_variables.variables.update(self.variables)
             # Set the logic function variable to running
@@ -53,15 +48,10 @@ class LogicThread(threading.Thread):
         # Catch exceptions
         except Exception as e:
             click.secho(f'LogicThread encountered an error: {e}', fg='red')
-            if debug_mode:
-                click.secho(traceback.print_exc(), fg='red')
         # Finally, print a message that the run method has completed
         finally:
             # Set the logic function variable to not running
             shared_variables.variables['logic_function_running'] = False
-            # If debug mode is enabled, print a message
-            if debug_mode:
-                click.secho('LogicThread run method completed', fg='yellow')
 
 
     def logic_function(self):
@@ -93,10 +83,6 @@ class LogicThread(threading.Thread):
                 'selection_rule': selection_rule,
                 'input_process_running': input_process_running
             }
-
-            # If debug mode is enabled, print the variables
-            if shared_variables.variables.get('debug_mode'):
-                click.secho(f'Variables passed to LogicThread from shared variables: {variables}\n', fg='yellow')
             
             all_orders = []
             current_sorted_batches = []
@@ -113,13 +99,6 @@ class LogicThread(threading.Thread):
             # Remove batches with empty orders
             current_sorted_batches = [batch for batch in current_sorted_batches if len(batch['orders']) > 0]
 
-            # Log initial orders and batches
-            if shared_variables.variables.get('debug_mode'):
-                click.secho('Initial batches:', fg='yellow')
-                debug_print_batches(current_sorted_batches)
-                click.secho('Initial orders:', fg='yellow')
-                debug_print_orders(all_orders)
-
             # Loops while the input process is running
             while input_process_running:
                 # Check if for the current batch the picking process has already ended
@@ -133,11 +112,7 @@ class LogicThread(threading.Thread):
                 if is_new_order_available():
                     # Get the new order
                     order = get_new_order()
-                    if shared_variables.variables.get('debug_mode'):
-                        click.secho(f'New order arrived:', fg='yellow')
-                        debug_print_orders([order])
-                        click.secho(f'Current orders:', fg='yellow')
-                        debug_print_orders(all_orders)
+
                     # Pass the new order and receive batches with release times
                     current_sorted_batches = copy.deepcopy(new_order_arrives(order, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, release_parameter, selection_rule, all_orders))
                     # Remove batches with empty orders
@@ -180,11 +155,6 @@ class LogicThread(threading.Thread):
                     
                                     # Remove the batch from the list of sorted batches
                                     current_sorted_batches.remove(batch)
-
-                                    # Print for debugging purposes
-                                    if shared_variables.variables.get('debug_mode'):
-                                        click.secho(f'Released batch with release time: {datetime.datetime.fromtimestamp(batch['release_time']).strftime('%H:%M:%S.%f')[:-5]} and arrival time: {datetime.datetime.fromtimestamp(current_picking_process_arrival_time).strftime('%H:%M:%S.%f')[:-5]}', fg='yellow')
-                                        debug_print_batches([batch])
                     
                                     break
 
@@ -218,55 +188,3 @@ class LogicThread(threading.Thread):
 
         except Exception as e:
             click.secho(f'Logic function encountered an error: {e}', fg='red')
-            if shared_variables.variables.get('debug_mode'):
-                click.secho(traceback.print_exc(), fg='red')
-
-
-def debug_print_batches(current_sorted_batches):
-    '''
-    Print the current sorted batches.
-
-    :param current_sorted_batches: List of current sorted batches
-    '''
-    # Convert the batch structure to a table
-    table = []
-    for batch in current_sorted_batches:
-        batch_id = batch['batch_id']
-        orders = []
-        for order in batch['orders']:
-            order_id = order['order_id']
-            items = []
-            for item in order['items']:
-                item_id = item['item_id']
-                abs_x_position = item['abs_x_position']
-                abs_y_position = item['abs_y_position']
-                abs_z_position = item['abs_z_position']
-                items.append(f"Item ID: {item_id}, X: {abs_x_position}, Y: {abs_y_position}, Z: {abs_z_position}")
-            orders.append(f"Order ID: {order_id}\n" + "\n".join(items))
-        table.append([f"Batch ID: {batch_id}", "\n\n".join(orders)])
-
-    # Print the table
-    click.secho(f'{tabulate.tabulate(table, headers=["Batch", "Orders"], tablefmt="simple_grid")}\n', fg='yellow')
-
-
-def debug_print_orders(orders):
-    '''
-    Print the current orders.
-
-    :param orders: List of current orders
-    '''
-    # Convert the order structure to a table
-    table = []
-    for order in orders:
-        order_id = order['order_id']
-        items = []
-        for item in order['items']:
-            item_id = item['item_id']
-            abs_x_position = item['abs_x_position']
-            abs_y_position = item['abs_y_position']
-            abs_z_position = item['abs_z_position']
-            items.append(f"Item ID: {item_id}, X: {abs_x_position}, Y: {abs_y_position}, Z: {abs_z_position}")
-        table.append([f"Order ID: {order_id}", "\n".join(items)])
-
-    # Print the table
-    click.secho(f'{tabulate.tabulate(table, headers=["Order", "Items"], tablefmt="simple_grid")}\n', fg='yellow')

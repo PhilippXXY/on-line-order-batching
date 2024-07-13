@@ -187,8 +187,6 @@ def release_order():
     # Catch exceptions
     except Exception as e:
         click.secho(f'release_order encountered an error: {e}', fg='red')
-        if shared_variables.variables.get('debug_mode'):
-            traceback.print_exc()
         return None
     
 
@@ -225,8 +223,6 @@ def release_last_order():
     # Catch exceptions
     except Exception as e:
         click.secho(f'release_last_order encountered an error: {e}', fg='red')
-        if shared_variables.variables.get('debug_mode'):
-            traceback.print_exc()
         return None
 
 
