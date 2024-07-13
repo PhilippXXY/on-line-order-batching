@@ -1,5 +1,6 @@
 import copy
 import time
+import traceback
 
 import click
 from src.core.logic.batch_tour_length_calculator import calculate_tour_length_s_shape_routing
@@ -75,7 +76,7 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, wa
                 # Add the release time to the batch
                 batches[0]['release_time'] = release_time
             else:
-                print("Error: longest_sst_batch is None")
+                click.secho("Error: longest_sst_batch is None", fg='red')
                 return batches
             return batches
 
@@ -94,6 +95,8 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, wa
     # Catch any exception that might occur
     except Exception as e:
         click.secho(f'Error in order_picking_decision_point_ab: {e}', fg='red')
+        if shared_variables.variables.get('debug_mode'):
+            click.secho(traceback.print_exc(), fg='red')
         return batches
 
 def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, selection_rule, time_limit):
@@ -109,12 +112,15 @@ def order_picking_decision_point_c(orders, max_batch_size, warehouse_layout, war
     :param time_limit: time limit for the iterated local search algorithm
     :return: list of batches
     '''
-    print('Order picking decision point C reached')
+    # Generate a set of batches by means of batching heuristic
     batches = create_start_batches(orders, max_batch_size)
     # Copy the batches to prevent the original batches from being changed
     copied_batches = copy.deepcopy(batches)
-    # Apply the iterated local search algorithm to the batches
-    batches = iterated_local_search(copied_batches, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit)
+    # Apply the iterated local search algorithm to the batches when more than one batch is available 
+    # As the iterated local search algorithm is only applicable to more than one batch
+    if len(batches) > 1:
+        # Apply the iterated local search algorithm to the batches
+        batches = iterated_local_search(copied_batches, max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit)
     # Apply the selection rules
     ordered_for_picking_batches = sort_batches_by_selection_rules(batches, warehouse_layout, selection_rule)
     # Add the release time to the batches
@@ -168,13 +174,18 @@ def selection_rule_short(batches, warehouse_layout):
     # Initialize the sorted batches
     sorted_batches = []
 
-    # For every batch in the list of batches
-    for batch in batches:
-        # Create the key 'tour_length' in the batch dictionary and assign the tour length of the batch to it
-        batch['tour_length'] = calculate_tour_length_s_shape_routing(batch['orders'], warehouse_layout)
+    try:
+        # For every batch in the list of batches
+        for batch in batches:
+            # Create the key 'tour_length' in the batch dictionary and assign the tour length of the batch to it
+            batch['tour_length'] = calculate_tour_length_s_shape_routing(batch, warehouse_layout)[0]
 
-    # Sort the batches by the tour length ascending
-    sorted_batches = sorted(batches, key=lambda x: x['tour_length'])
+        # Sort the batches by the tour length ascending
+        sorted_batches = sorted(batches, key=lambda x: x['tour_length'])
+    except Exception as e:
+        click.secho(f'Error in selection_rule_short: {e}', fg='red')
+        if shared_variables.variables.get('debug_mode'):
+            click.secho(traceback.print_exc(), fg='red')
 
     return sorted_batches
 
@@ -190,13 +201,18 @@ def selection_rule_long(batches, warehouse_layout):
     # Initialize the sorted batches
     sorted_batches = []
 
-    # For every batch in the list of batches
-    for batch in batches:
-        # Create the key 'tour_length' in the batch dictionary and assign the tour length of the batch to it
-        batch['tour_length'] = calculate_tour_length_s_shape_routing(batch['orders'], warehouse_layout)
+    try:
+        # For every batch in the list of batches
+        for batch in batches:
+            # Create the key 'tour_length' in the batch dictionary and assign the tour length of the batch to it
+            batch['tour_length'] = calculate_tour_length_s_shape_routing(batch, warehouse_layout)[0]
 
-    # Sort the batches by the tour length descending
-    sorted_batches = sorted(batches, key=lambda x: x['tour_length'], reverse=True)
+        # Sort the batches by the tour length descending
+        sorted_batches = sorted(batches, key=lambda x: x['tour_length'], reverse=True)
+    except Exception as e:
+        click.secho(f'Error in selection_rule_long: {e}', fg='red')
+        if shared_variables.variables.get('debug_mode'):
+            click.secho(traceback.print_exc(), fg='red')
 
     return sorted_batches
 
@@ -212,23 +228,28 @@ def selection_rule_sav(batches, warehouse_layout):
     # Initialize the sorted batches
     sorted_batches = []
 
-    # For every batch in the list of batches
-    for batch in batches:
-        # Initialize the sum of the single service times
-        single_service_time = 0
+    try:
+        # For every batch in the list of batches
+        for batch in batches:
+            # Initialize the sum of the single service times
+            single_service_time = 0
 
-        # For every order in the batch
-        for order in batch['orders']:
-            # Create for every order a batch with only the order
-            order_batch = [{'orders': [order]}]
-            # Calculate the single service time of the order
-            single_service_time += calculate_tour_length_s_shape_routing(order_batch, warehouse_layout)
+            # For every order in the batch
+            for order in batch['orders']:
+                # Create for every order a batch with only the order
+                order_batch = {'batch_id': generate_unique_id(), 'orders': [order]}
+                # Calculate the single service time of the order
+                single_service_time += calculate_tour_length_s_shape_routing(order_batch, warehouse_layout)[0]
 
-        # Calculate the savings of the batch
-        batch['savings'] = single_service_time - calculate_tour_length_s_shape_routing(batch['orders'], warehouse_layout)
+            # Calculate the savings of the batch
+            batch['savings'] = single_service_time - calculate_tour_length_s_shape_routing(batch, warehouse_layout)[0]
 
-    # Sort the batches by the savings descending
-    sorted_batches = sorted(batches, key=lambda x: x['savings'], reverse=True)
+        # Sort the batches by the savings descending
+        sorted_batches = sorted(batches, key=lambda x: x['savings'], reverse=True)
+    except Exception as e:
+        click.secho(f'Error in selection_rule_sav: {e}', fg='red')
+        if shared_variables.variables.get('debug_mode'):
+            click.secho(traceback.print_exc(), fg='red')
 
     return sorted_batches
 

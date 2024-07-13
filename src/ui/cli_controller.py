@@ -1,5 +1,6 @@
 import threading
 import time
+import traceback
 import uuid
 
 import click
@@ -59,6 +60,8 @@ class CLIThread(threading.Thread):
         # Catch exceptions
         except Exception as e:
             click.secho(f'CLIThread encountered an error: {e}', fg='red')
+            if shared_variables.variables.get('debug_mode'):
+                click.secho(traceback.print_exc(), fg='red')
         # Finally, print a message that the run method has completed
         finally:
             # Set the input process to not running
@@ -86,7 +89,7 @@ class CLIThread(threading.Thread):
                 shared_variables.orders.append(order)
                 # If debug mode is enabled, print a message
                 if shared_variables.variables.get('debug_mode'):
-                    click.secho(f'Order released: {order}\n', fg = 'yellow')
+                    click.secho(f'Order released: {order}\n', fg='yellow')
                 return order
             # If there are no more orders in the imported orders
             else:
@@ -97,6 +100,8 @@ class CLIThread(threading.Thread):
         # Catch exceptions
         except Exception as e:
             click.secho(f'release_order encountered an error: {e}', fg='red')
+            if shared_variables.variables.get('debug_mode'):
+                click.secho(traceback.print_exc(), fg='red')
             return None
 
 

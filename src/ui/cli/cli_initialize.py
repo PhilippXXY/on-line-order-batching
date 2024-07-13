@@ -86,7 +86,7 @@ def get_inputs():
             'type': 'input',
             'name': 'warehouse_layout_path',
             'message': 'Path to the warehouse layout [.csv]:',
-            'default': 'tests/data/warehouse_positions_20x10x5.CSV'
+            'default': 'tests/data/warehouse_positions.csv'
         },
         {
             'type': 'input',

@@ -131,7 +131,27 @@ def get_new_order():
             item['abs_x_position'] = item_data['abs_x_position']
             item['abs_y_position'] = item_data['abs_y_position']
             item['abs_z_position'] = item_data['abs_z_position']
+        return new_order
+    else:
+        return None
 
+
+def get_last_order():
+    '''
+    Get the last order from the shared variables
+
+    :return: order
+    '''
+    # Get the new order and remove it from the list
+    if shared_variables.last_orders:
+        new_order = shared_variables.last_orders.pop(0)
+        # Add to each item the absolute position in the warehouse
+        for item in new_order['items']:
+            item_id = item['item_id']
+            item_data = join_item_id_and_position_csv(get_warehouse_layout_path(), item_id)
+            item['abs_x_position'] = item_data['abs_x_position']
+            item['abs_y_position'] = item_data['abs_y_position']
+            item['abs_z_position'] = item_data['abs_z_position']
         return new_order
     else:
         return None
