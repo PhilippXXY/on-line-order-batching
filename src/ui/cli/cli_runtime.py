@@ -32,6 +32,9 @@ def runtime():
     # Initialize the last end time
     last_end_time = 0
     
+    # Initialize the flag to print the first batch
+    first_batch_flag = True
+
     # Store the last printed batch
     last_printed_batch = None
 
@@ -42,13 +45,28 @@ def runtime():
     while not end_input_process:
         # Check if the logic function has populated the shared variables with the necessary data
         current_picking_batch = shared_variables.variables.get('current_picking_batch')
+        # Check if a batch is available and print it
         if current_picking_batch is not None:
-            # Check if the first batch is available and print it
-            # Check if the picker state has changed and the picker is now not available anymore
-            if (picker_state != get_picker_state()) and not get_picker_state():
-                batch_to_select = get_batches_to_select()
-                last_printed_batch = batch_to_select
+            # Check if it is the first batch, as otherwise it could result in a missing batch
+            if first_batch_flag:
+                # Get the current batch
+                batch_to_select = current_picking_batch
+                # Print the batch
                 print_batch_to_select(batch_to_select)
+                # Store the batch
+                last_printed_batch = batch_to_select
+                # Set the flag to False
+                first_batch_flag = False
+            # Check if the picker state has changed and the picker is now not available anymore
+            elif (picker_state != get_picker_state()) and not get_picker_state():
+                # Check if the last printed batch is the same as the current batch
+                if last_printed_batch != current_picking_batch:
+                    # Get the current batch
+                    batch_to_select = get_batches_to_select()
+                    # Store the batch
+                    last_printed_batch = batch_to_select
+                    # Print the batch
+                    print_batch_to_select(batch_to_select)
                 
         # Update the picker state
         picker_state = get_picker_state()
