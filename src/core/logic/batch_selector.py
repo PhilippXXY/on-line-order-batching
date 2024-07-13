@@ -1,4 +1,5 @@
 import copy
+import datetime
 import time
 import traceback
 
@@ -34,50 +35,9 @@ def order_picking_decision_point_ab(orders, max_batch_size, warehouse_layout, wa
             batches = iterated_local_search(copy.deepcopy(batches), max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit)
         # When only one batch is available, the batch won't be released immediately, in order to prevent the case that a new order arrives, which could be added to the batch.
         if len(batches) == 1:
-            st_batch, _ = calculate_tour_length_s_shape_routing(batches[0], warehouse_layout)
-           
-            # Initialize a new batch
-            new_batches = []
-
-            # Add every order of the batch to new distinct batches
-            for order in batches[0]['orders']:
-                # Add the order to a new batch
-                new_batches.append({
-                    'batch_id': generate_unique_id(),
-                    'orders': [order]
-                })
-
-            longest_sst = 0
-            longest_sst_batch = None
-            # For every order in the new batches
-            for i in range(len(new_batches)):
-                # Initialize the tour length of the current order.
-                batch_sst, _ = calculate_tour_length_s_shape_routing(new_batches[i], warehouse_layout)
-                # Check if the tour length of the current order is bigger than the smallest tour length found so far
-                if batch_sst > longest_sst:
-                    # Update the biggest tour length found so far
-                    longest_sst = batch_sst
-                    # Update the batch with the longest single service time
-                    longest_sst_batch = new_batches[i]
-
-            # Ensure longest_sst_batch is not None
-            if longest_sst_batch is not None:
-                # Get the arrival time of the order with the longest single service time
-                arrival_time_longest_sst_order = longest_sst_batch['orders'][0]['arrival_time']
-                # Transform the tour lengths according to the predefined units per second
-                st_batch = st_batch / shared_variables.variables['tour_length_units_per_second']
-                longest_sst = longest_sst / shared_variables.variables['tour_length_units_per_second']
-                arrival_time_longest_sst_order = arrival_time_longest_sst_order / shared_variables.variables['tour_length_units_per_second']
-                # Calculate the scheduled release formula as described in the paper by Henn et al. (2012)
-                scheduled_release_formula = ((1 + release_parameter) * arrival_time_longest_sst_order) + (release_parameter * longest_sst) - st_batch
-                # Set the release time to the maximum of the current time and the scheduled release formula
-                release_time = max(time.time(), scheduled_release_formula)
-
-                # Add the release time to the batch
-                batches[0]['release_time'] = release_time
-            else:
-                click.secho("Error: longest_sst_batch is None", fg='red')
-                return batches
+            # Calculate the delayed release time of the batch
+            batches[0] = calculate_delay_single_batch(copy.deepcopy(batches[0]), warehouse_layout, release_parameter)
+            # Return the batch with the release time
             return batches
 
 
@@ -253,3 +213,69 @@ def selection_rule_sav(batches, warehouse_layout):
 
     return sorted_batches
 
+
+def calculate_delay_single_batch(batch, warehouse_layout, release_parameter_alpha):
+    '''
+    This function calculates the release time of a single batch.
+    It calculates the release time according to the scheduled release formula as described in the paper by Henn et al. (2012) 4.1 Algorithm 1.
+
+    :param batch: batch to determine the release time
+    :param warehouse_layout: dictionary containing the warehouse layout information
+    :param release_parameter: parameter for the release time of the batch [0;1]
+    :return: batch with release time
+    '''
+    # Initialize the variables
+    tour_length_units_per_second = shared_variables.variables['tour_length_units_per_second'] # Tour length units per second
+
+    st_j_service_time_batch = 0.0 # Service time of the batch in seconds
+    st_i_longest_sst_order = 0.0 # Service time of the order with the longest single service time in seconds
+    ri_arrival_time_longest_order = 0.0 # Arrival time of the order with the longest single service time in milliseconds
+    t_current_time = time.time() # Current time in milliseconds
+
+
+    # Calculate the tour length of the batch
+    tour_length_j_batch, _ = calculate_tour_length_s_shape_routing(batch, warehouse_layout)
+    # Calculate the service time of the batch
+    st_j_service_time_batch = tour_length_j_batch / tour_length_units_per_second
+
+    # Add every order of the batch to new distinct batches
+    new_batches = []
+    for order in batch['orders']:
+        new_batches.append({
+            'batch_id': generate_unique_id(),
+            'orders': [order]
+        })
+
+    # Get the service time and the arrival time of the longest taking order
+    for i in range(len(new_batches)):
+        # Calculate the tour length of the current order
+        batch_sst, _ = calculate_tour_length_s_shape_routing(new_batches[i], warehouse_layout)
+        # Transform the tour length according to the predefined units per second
+        batch_sst = batch_sst / tour_length_units_per_second
+        # Check if the tour length of the current order is bigger than the smallest tour length found so far
+        if batch_sst > st_i_longest_sst_order:
+            # Update the biggest tour length found so far 
+            st_i_longest_sst_order = float(batch_sst)
+            # Set the arrival time of the order with the longest single service time
+            ri_arrival_time_longest_order_temp = new_batches[i]['orders'][0]['arrival_time']
+            # Calculate the difference between the arrival time of the order with the longest single service time and the current time
+            ri_arrival_time_longest_order = abs(ri_arrival_time_longest_order_temp - t_current_time)
+            print(f"Arrival time: {ri_arrival_time_longest_order}")
+
+    # Check if the given values fulfill the conditions given by the paper
+    if (1 + release_parameter_alpha) * ri_arrival_time_longest_order + release_parameter_alpha * st_i_longest_sst_order > 2 * t_current_time + st_j_service_time_batch:
+        click.secho("Error: The given values do not fulfill the conditions given by the paper.", fg='red')
+
+    # Calculate the scheduled release formula as described in the paper by Henn et al. (2012) 4.1 Algorithm 1
+    scheduled_release_by_formula = ((1 + release_parameter_alpha) * ri_arrival_time_longest_order) + (release_parameter_alpha * st_i_longest_sst_order) - st_j_service_time_batch
+    print(f'first part {(1 + release_parameter_alpha) * ri_arrival_time_longest_order}')	
+    print(f'second part {release_parameter_alpha * st_i_longest_sst_order}')
+    print(f'third part {st_j_service_time_batch}')
+    # Set the release time to the maximum of the current time and the scheduled release time
+    release_time = max(t_current_time, scheduled_release_by_formula)
+    print(f"Release time: {release_time}")
+    print(f"Difference: {release_time - t_current_time}")
+    # Add the release time to the batch
+    batch['release_time'] = release_time
+
+    return batch
