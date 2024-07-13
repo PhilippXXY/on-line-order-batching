@@ -11,7 +11,7 @@ from src.core.logic.input_handler import (
     get_threshold_parameter, get_time_limit, get_warehouse_layout, get_warehouse_layout_path, 
     is_new_order_available
 )
-from src.core.logic.pivot_logic import initial_orders_arrived, last_order_arrives, new_order_arrives, one_batch_available, picker_starts_tour
+from src.core.logic.pivot_logic import add_additional_information_to_batches, initial_orders_arrived, last_order_arrives, new_order_arrives, one_batch_available, picker_starts_tour
 import tabulate
 import src.vars.shared_variables as shared_variables
 
@@ -202,54 +202,18 @@ class LogicThread(threading.Thread):
 
             # Sort the last existing batches and release them sequentially
             current_sorted_batches = last_order_arrives(copy.deepcopy(order), max_batch_size, warehouse_layout, warehouse_layout_path, rearrangement_parameter, threshold_parameter, time_limit, selection_rule, copy.deepcopy(all_orders))
+            # Add additional information to the last batches
+            add_additional_information_to_batches(current_sorted_batches, warehouse_layout)
+            # Add the last order to the list of all orders
+            all_orders.append(order)
+            # Add the last batches to the shared variables
+            shared_variables.last_batches_to_select = current_sorted_batches
             # Update the amount of existing batches
             shared_variables.variables['amount_of_existing_batches'] = len(current_sorted_batches)
+            # Update the amount of existing orders
+            shared_variables.variables['amount_of_existing_orders'] = len(all_orders)
             # Set a flag that the last batching process is finished
             shared_variables.variables['last_batching_process_finished'] = True
-
-            # Loops after the input process is finished to process the remaining batches
-            while len(current_sorted_batches) > 0:
-
-                if time.time() < current_picking_process_arrival_time:
-                    # Set the picker state to False (not available)
-                    shared_variables.picker_state = False
-                else:
-                    # Set the picker state to True (available)
-                    shared_variables.picker_state = True
-
-                    # Go through the remaining batches
-                    for batch in current_sorted_batches:
-                        # Check if the batch is ready to be picked
-                        if batch['release_time'] < time.time():
-                            # Start the picking process
-                            current_picking_batch, current_picking_process_start_time, current_picking_process_arrival_time = picker_starts_tour(batch, warehouse_layout)
-
-                            # Store the current batch in the shared variables
-                            shared_variables.variables['current_picking_batch'] = current_picking_batch
-                            # Store the current picking process start time in the shared variables
-                            shared_variables.variables['current_picking_process_start_time'] = current_picking_process_start_time
-                            # Store the current picking process arrival time in the shared variables
-                            shared_variables.variables['current_picking_process_arrival_time'] = current_picking_process_arrival_time
-                            
-                            # Remove the orders of the current batch from the list of all orders
-                            for batch_order in current_picking_batch['orders']:
-                                for all_order in all_orders:
-                                    if batch_order['order_id'] == all_order['order_id']:
-                                        all_orders.remove(all_order)
-                            # Remove the batch from the list of sorted batches
-                            current_sorted_batches.remove(batch)
-                            # Print for debugging purposes
-                            if shared_variables.variables.get('debug_mode'):
-                                click.secho(f'Released batch with release time: {datetime.datetime.fromtimestamp(current_picking_process_start_time).strftime('%H:%M:%S.%f')[:-5]} and arrival time: {datetime.datetime.fromtimestamp(current_picking_process_arrival_time).strftime('%H:%M:%S.%f')[:-5]}', fg='yellow')
-                                debug_print_batches([batch])
-                            break
-
-                # Update the amount of existing batches
-                shared_variables.variables['amount_of_existing_batches'] = len(current_sorted_batches)
-                # Update the amount of existing orders
-                shared_variables.variables['amount_of_existing_orders'] = len(all_orders)
-                # Avoid busy waiting
-                time.sleep(0.05)
 
         except Exception as e:
             click.secho(f'Logic function encountered an error: {e}', fg='red')
