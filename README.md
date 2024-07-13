@@ -30,11 +30,14 @@ In manual order picking systems, order pickers walk or ride through a distributi
 ## :computer: How to Run
 1. **Download the project**
 2. **Install Python and the necessary [dependencies](requirements.txt)**
-3. **Run the program**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Run the program**:
    ```bash
    python -m path.to.your.folder.src.main
    ```
-4. **Follow the given instructions in the Command Line**
+5. **Follow the given instructions in the Command Line**
 
 ### :keyboard: Inputs
 - **Warehouse Layout**: A CSV file where the positions of the items inside the warehouse are stored. Example file: [warehouse_positions.csv](tests/data/warehouse_positions.csv).
