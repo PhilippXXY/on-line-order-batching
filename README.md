@@ -38,17 +38,15 @@ In manual order picking systems, order pickers walk or ride through a distributi
 3. **Create and Activate a Virtual Environment**:
    ```bash
    python -m venv env
-   source env/bin/activate  # On Windows use `env\Scripts\activate`
    ```
-4. **Install the Dependencies**
    ```bash
-   pip install -r requirements.txt
+   env\Scripts\activate # On MacOS use `env/bin/activate`
    ```
-5. **Install the package**
+4. **Install the package**
    ```bash
    pip install .
    ```
-6. **Start the Program**
+5. **Start the Program**
    ```bash
    python -m src.main
    ```
