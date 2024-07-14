@@ -27,17 +27,29 @@ In manual order picking systems, order pickers walk or ride through a distributi
 - **Methodology**: Modify heuristic approaches for static order batching to suit dynamic situations.
 - **Application**: Suitable for manual, single-person order picking systems in warehouses.
 
-## :computer: How to Run
-1. **Download the project**
-2. **Install Python and the necessary [dependencies](requirements.txt)**
+## :computer: How to Run without git
+1. **Download the repository**
+   - Click on the "Code" button and select "Download ZIP".
+   - Extract the ZIP file to the desired location.
+2. **Navigate to the Project Directory**
    ```bash
-   pip install -r requirements.txt
+   cd path/to/extracted/on-line-order-batching
    ```
-3. **Run the program**:
+3. **Create and Activate a Virtual Environment**:
    ```bash
-   python -m path.to.your.folder.src.main
+   python -m venv env
    ```
-4. **Follow the given instructions in the Command Line**
+   ```bash
+   env\Scripts\activate # On MacOS use `env/bin/activate`
+   ```
+4. **Install the package**
+   ```bash
+   pip install .
+   ```
+5. **Start the Program**
+   ```bash
+   python -m src.main
+   ```
 
 ### :keyboard: Inputs
 - **Warehouse Layout**: A CSV file where the positions of the items inside the warehouse are stored. Example file: [warehouse_positions.csv](tests/data/warehouse_positions.csv).
