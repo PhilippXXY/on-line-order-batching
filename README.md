@@ -70,7 +70,7 @@ In manual order picking systems, order pickers walk or ride through a distributi
 ### :test_tube: Testing and Debugging
 To get more information for debugging purposes, switch to the [develop branch](../../tree/develop) and run the program with:
 ```bash
-python -m path.to.your.folder.src.main -d
+python -m src.main -d
 ```
 In this branch, test files are available to check the functions separately.
 
