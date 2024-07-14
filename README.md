@@ -30,7 +30,7 @@ In manual order picking systems, order pickers walk or ride through a distributi
 
 ## :computer: How to Run without git
 1. **Download the repository**
-   - Click on the "Code" button and select "Download ZIP".
+   - Click on the "Code" button and select "Download ZIP" or download the latest release.
    - Extract the ZIP file to the desired location.
 2. **Navigate to the Project Directory**
    ```bash
