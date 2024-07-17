@@ -16,7 +16,7 @@ This project is part of the [4D4L project](https://www.ifl.kit.edu/forschungspro
 
 The algorithm addresses the on-line order batching problem in an order-picking warehouse, with the goal of minimizing the total completion time of customer orders arriving within a certain period. It modifies heuristic approaches used for static order batching to handle dynamic situations, based on the scientific paper by Sebastian Henn, which can be read [here](https://www.sciencedirect.com/science/article/pii/S0305054812000020/).
 
-The detailed paper for this project is available directly [on GitHub](Implementation%20of%20'Algorithms%20for%20on-line%20order%20batching%20in%20an%20order%20picking%20warehouse'%20using%20Python.PDF) or in the [KITopen Repository](https://publikationen.bibliothek.kit.edu/1000172331).
+The detailed paper for this project is available directly on [GitHub](Implementation%20of%20'Algorithms%20for%20on-line%20order%20batching%20in%20an%20order%20picking%20warehouse'%20using%20Python.PDF) or in the [KITopen Repository](https://doi.org/10.5445/ir/1000172331).
 
 ## :factory: Order Picking in Warehouse
 
@@ -132,7 +132,7 @@ python -m src.main -d
 In this branch, test files are available to check the functions separately.
 
 ### :link: Useful Links
-- [Paper of this project](https://publikationen.bibliothek.kit.edu/1000172331)
+- [Paper of this project](https://doi.org/10.5445/ir/1000172331)
 - [Scientific Paper by Sebastian Henn](https://www.sciencedirect.com/science/article/pii/S0305054812000020/)
 - [4D4L Project](https://www.ifl.kit.edu/forschungsprojekte_5762.php)
 - [Institute of Material Handling and Logistics (IFL)](https://www.ifl.kit.edu/index.php)
