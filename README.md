@@ -1,15 +1,5 @@
 # On-line Order Batching Algorithm
 
-## Table of Contents
-1. [Introduction](#blue_book-introduction)
-2. [Order Picking in Warehouse](#factory-order-picking-in-warehouse)
-3. [Project Details](#scroll-project-details)
-4. [How to Run](#computer-how-to-run)
-5. [Inputs](#keyboard-inputs)
-6. [Outputs](#incoming_envelope-outputs)
-7. [Testing and Debugging](#test_tube-testing-and-debugging)
-8. [Useful Links](#link-useful-links)
-
 ## :blue_book: Introduction
 
 This project is part of the [4D4L project](https://www.ifl.kit.edu/forschungsprojekte_5762.php) at the [Institute of Material Handling and Logistics (IFL)](https://www.ifl.kit.edu/index.php) from the [Karlsruhe Institute of Technology (KIT)](https://www.kit.edu/).
